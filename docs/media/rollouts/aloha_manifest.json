@@ -1,0 +1,97 @@
+{
+  "scope": "Selected archived-action replays; no new policy inference or test cohort.",
+  "videos": [
+    {
+      "dataset": "aloha",
+      "training_seed": 3,
+      "backbone": "groot",
+      "initial_state_id": 10097,
+      "environment_seed": 1383331,
+      "success": true,
+      "steps": 248,
+      "reset_hashes_match": true,
+      "all_states_rewards_match": true,
+      "source": "asset/durable/aloha/evaluation_trajectories/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_003/final_test.npz",
+      "file": "aloha_seed3_groot_start10097.mp4",
+      "sha256": "0de23cff69dc99313d1950a27b8632af9fca69089799c3e12551f311b7c2b716",
+      "bytes": 176090,
+      "preview": {
+        "file": "aloha_seed3_groot_start10097.gif",
+        "sha256": "f440703b8b8f4d5b11ff62b1dfa63b5e7d427a955234c7d58eecf77000dba2a0",
+        "bytes": 386362,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    },
+    {
+      "dataset": "aloha",
+      "training_seed": 3,
+      "backbone": "qwen3vl",
+      "initial_state_id": 10097,
+      "environment_seed": 1383331,
+      "success": false,
+      "steps": 400,
+      "reset_hashes_match": true,
+      "all_states_rewards_match": true,
+      "source": "asset/durable/aloha/evaluation_trajectories/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_003/final_test.npz",
+      "file": "aloha_seed3_qwen3vl_start10097.mp4",
+      "sha256": "3ecb1283f63e502f6d00060602cca159f83a443b4a31df1e710d7f493ff3ccb3",
+      "bytes": 194538,
+      "preview": {
+        "file": "aloha_seed3_qwen3vl_start10097.gif",
+        "sha256": "bb487b7ae4a662382cc33bf8a6f39ee45a2a55c86dbcd3846de6a4e56763d235",
+        "bytes": 509615,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    },
+    {
+      "dataset": "aloha",
+      "training_seed": 3,
+      "backbone": "groot",
+      "initial_state_id": 10086,
+      "environment_seed": 1381824,
+      "success": false,
+      "steps": 400,
+      "reset_hashes_match": true,
+      "all_states_rewards_match": true,
+      "source": "asset/durable/aloha/evaluation_trajectories/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_003/final_test.npz",
+      "file": "aloha_seed3_groot_start10086.mp4",
+      "sha256": "2ff0f76e9e516310541f37918807a5e980eb4660ef7626784cb54770fb68c1e1",
+      "bytes": 234918,
+      "preview": {
+        "file": "aloha_seed3_groot_start10086.gif",
+        "sha256": "ffef9a51c79643fd4bdd609a8c6cf700576f32e646917c8ddfc28a1cc3a370ad",
+        "bytes": 517863,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    },
+    {
+      "dataset": "aloha",
+      "training_seed": 3,
+      "backbone": "qwen3vl",
+      "initial_state_id": 10086,
+      "environment_seed": 1381824,
+      "success": true,
+      "steps": 394,
+      "reset_hashes_match": true,
+      "all_states_rewards_match": true,
+      "source": "asset/durable/aloha/evaluation_trajectories/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_003/final_test.npz",
+      "file": "aloha_seed3_qwen3vl_start10086.mp4",
+      "sha256": "c49d4e1504a6fff204c6b3acdf477acd73631a07ae128260a5834fb567832feb",
+      "bytes": 237787,
+      "preview": {
+        "file": "aloha_seed3_qwen3vl_start10086.gif",
+        "sha256": "351cbf6c3476af17a833fe4b411d9dc0ed276c351fc781a848435655e0c4ce6c",
+        "bytes": 498514,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    }
+  ]
+}

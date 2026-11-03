@@ -1,0 +1,110 @@
+{
+  "scope": "Selected matched diagnostic reruns; not additional independent training replicates or a representative failure sample.",
+  "source_record": "asset/durable/libero/diagnostics/stage2_transition_probe_v5/stage2_transition_probe.json",
+  "videos": [
+    {
+      "dataset": "libero",
+      "task": 6,
+      "instruction": "put the cream cheese in the bowl",
+      "training_seed": 3,
+      "backbone": "groot",
+      "initial_state_id": 13,
+      "policy_sampling_seed": 3154150786,
+      "success": true,
+      "original_success": true,
+      "initial_observation_matches": true,
+      "original_steps": 98,
+      "rerun_steps": 98,
+      "file": "task6_seed3_groot_start13.mp4",
+      "source": "asset/durable/libero/diagnostics/stage2_transition_probe_v5/videos/task6_seed3_groot_start13.mp4",
+      "sha256": "30c3e0d7611a1c1378d31f30379e0da929bdc8e6051bc282de9a1f379193f4ca",
+      "bytes": 33608,
+      "preview": {
+        "file": "task6_seed3_groot_start13.gif",
+        "sha256": "56b92493769d51bd13546be342e99a95dc9dc92baa329392a28ca232f22adbab",
+        "bytes": 404662,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    },
+    {
+      "dataset": "libero",
+      "task": 9,
+      "instruction": "put the wine bottle on the rack",
+      "training_seed": 3,
+      "backbone": "groot",
+      "initial_state_id": 28,
+      "policy_sampling_seed": 101717327,
+      "success": false,
+      "original_success": false,
+      "initial_observation_matches": true,
+      "original_steps": 400,
+      "rerun_steps": 400,
+      "file": "task9_seed3_groot_start28.mp4",
+      "source": "asset/durable/libero/diagnostics/stage2_transition_probe_v5/videos/task9_seed3_groot_start28.mp4",
+      "sha256": "b6b2e7cedd15060fa1f2be743bae8760515cd66499332d2b8e9974b8bd78eff4",
+      "bytes": 66537,
+      "preview": {
+        "file": "task9_seed3_groot_start28.gif",
+        "sha256": "480f891ae840ed9947b6d1f3ce736910b97c2bed54e3a90c8cbf5587cbb08606",
+        "bytes": 775620,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    },
+    {
+      "dataset": "libero",
+      "task": 6,
+      "instruction": "put the cream cheese in the bowl",
+      "training_seed": 3,
+      "backbone": "qwen3vl",
+      "initial_state_id": 13,
+      "policy_sampling_seed": 3154150786,
+      "success": false,
+      "original_success": false,
+      "initial_observation_matches": true,
+      "original_steps": 400,
+      "rerun_steps": 400,
+      "file": "task6_seed3_qwen3vl_start13.mp4",
+      "source": "asset/durable/libero/diagnostics/stage2_transition_probe_v5/videos/task6_seed3_qwen3vl_start13.mp4",
+      "sha256": "fbf9dd0b09e9c0122ae7c98baab0ca358eeb920b93e7ef5fb9e29143b6e0e03a",
+      "bytes": 103872,
+      "preview": {
+        "file": "task6_seed3_qwen3vl_start13.gif",
+        "sha256": "5b2c935886f26235412e3044a83127e3ffa85cd9d3a88fb3eee03a6c1560ac4c",
+        "bytes": 1381221,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    },
+    {
+      "dataset": "libero",
+      "task": 9,
+      "instruction": "put the wine bottle on the rack",
+      "training_seed": 3,
+      "backbone": "qwen3vl",
+      "initial_state_id": 28,
+      "policy_sampling_seed": 101717327,
+      "success": true,
+      "original_success": true,
+      "initial_observation_matches": true,
+      "original_steps": 140,
+      "rerun_steps": 136,
+      "file": "task9_seed3_qwen3vl_start28.mp4",
+      "source": "asset/durable/libero/diagnostics/stage2_transition_probe_v5/videos/task9_seed3_qwen3vl_start28.mp4",
+      "sha256": "5ea3a2314ec0a767911b05878d07c9bebd22d7357d94dba67761f4287f76af2f",
+      "bytes": 37645,
+      "preview": {
+        "file": "task9_seed3_qwen3vl_start28.gif",
+        "sha256": "8cc760686bd3687db474f207d6259b33f4e86dcf81863ab8d86df9ca1a60a00c",
+        "bytes": 372903,
+        "fps": 8,
+        "width": 320,
+        "loop": true
+      }
+    }
+  ]
+}

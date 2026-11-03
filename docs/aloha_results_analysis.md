@@ -1,3 +1,5 @@
+> **Status update:** This document records an earlier workflow or evidence set. The completed three-seed ALOHA epoch-250 and LIBERO epoch-120 progression is summarized in [RESULTS.md](RESULTS.md). Historical launch commands and live-worker notices below are not current execution instructions.
+
 # ALOHA matched-study result analysis
 
 Updated 20 October 2026. This report covers the six completed ALOHA policies only: GR00T N1.7 and Qwen3-VL, trained with seeds 3, 4, and 5. Each record passes the locked verifier. The separate LIBERO portion is deferred pending a RunPod environment, so this analysis does not make combined cross-benchmark claims.

@@ -1,4 +1,6 @@
-# Project guide
+# frozen-vlm-control: project guide
+
+The project name is **frozen-vlm-control**. Recorded paths containing `action-omni` refer to historical or existing checkout locations. The manuscript retains its fixed paper title.
 
 Run commands from the repository root. This is a research repository with flat
 Python packages: source stays in `models/`, `data/`, `envs/`, and `configs/`.
@@ -20,7 +22,7 @@ checkpoints, so no `src/` migration or additional packaging layer is needed.
 | `scripts/archive/` | Superseded exploratory scripts, retained as historical source. |
 | `tests/` | Synthetic protocol, statistics, import, and command regression checks. |
 | `docs/` | Research notes, camera-ready workflow, validation, and review tracking. |
-| `manuscript/` | Editable LaTeX source, manuscript notes, and outline. |
+| `manuscript/` | LaTeX source, final PDF, curated figure data, and plots. |
 | External report output | Generated reports, kept outside the source repository. |
 | `asset/` | Local datasets, pretrained weights, feature caches, protocol manifests, run outputs, and durable evaluation/recovery state. See the [asset layout](ASSET_LAYOUT.md). |
 | `asset/cache/`, `asset/data/`, `asset/models/` | Reusable frozen features, local datasets, and pretrained backbone snapshots. |
@@ -29,15 +31,11 @@ checkpoints, so no `src/` migration or additional packaging layer is needed.
 | `baselines/` | Separate baseline reproduction instructions and scripts. |
 | `third_party/` | Ignored local upstream checkouts. |
 
-The root `plan.md` remains the active camera-ready plan. Historical generated
-files are archived outside the repository. The editor's
-`manuscript/main.tex` path is unchanged. New experiments use the execution
-layout described in [commands](../scripts/README.md).
+## Current experiment
 
-The live two-Pod RunPod deployment, durable storage paths, status commands,
-recovery rules, and post-run analysis steps are recorded in the
-[team continuity guide](team_continuity_guide.md). Check it before restarting or
-cleaning up any experiment process or artifact.
+The completed campaign compares frozen layer-16 GR00T and Qwen features using three independently trained heads per backbone per benchmark. Final checkpoints are ALOHA epoch 250 and LIBERO epoch 120. See the [project overview](../README.md), [objective](OBJECTIVE.md), [results](RESULTS.md), and [manuscript](../manuscript/main.tex).
+
+The integrity audit and final records establish completion; operational study-status files are stale. Historical RunPod notices in the continuity guide do not describe current process state. Local planning files are ignored and are not prerequisites for understanding the public experiment.
 
 ## Setup and checks
 
@@ -74,9 +72,7 @@ for remaining real-model and simulator checks.
 | `report/camera_ready_validation.md` | [docs/camera_ready_validation.md](camera_ready_validation.md) |
 | `report/reviewer_response_matrix.md` | [docs/reviewer_response_matrix.md](reviewer_response_matrix.md) |
 
-The objective/results/reference notes retain the historical study. Use the
-[active plan](../plan.md), [manuscript](../manuscript/README.md), and
-[reviewer matrix](reviewer_response_matrix.md) for the current revision.
+The objective and results describe the current progression campaign. Older component-study notes are preserved under `docs/archive/`. The reviewer matrix and camera-ready workflow are historical records; the manuscript and integrity audit define the current evidence.
 
 The root `train.py`, `precompute_embeddings.py`, and `inference.py` now forward
 to their `scripts/` counterparts rather than maintaining separate pipelines.

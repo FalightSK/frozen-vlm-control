@@ -1,327 +1,79 @@
-# VLA anatomy — which components decide closed-loop success
+# frozen-vlm-control
 
-> **Team handoff (20 October 2026):** the historical results below are separate from the update-matched follow-up, which is running on two RunPod Pods. At the latest check both workers were still precomputing features; policy training had not started. See the [team continuity guide](docs/team_continuity_guide.md) for current paths, live monitoring, recovery rules, and the final analysis steps. Do not relaunch workers that are already running.
+Frozen vision-language features for robot control.
 
-For repository navigation, setup, tests, and the document migration map, see the
-[project guide](docs/README.md). Source packages remain directly importable from
-the repository root; `scripts/` contains commands and `docs/` contains written
-research records.
+**Accepted at [The International Joint Symposium on Artificial Intelligence and Natural Language Processing (iSAI-NLP 2026)](https://isai-nlp2026.aiat.or.th/)**
 
-A controlled study of **vision-language-action** architecture. One identical
-19.2M-parameter head (token adapter + DiT flow-matching decoder) is trained
-against **frozen** published backbones, layer-matched, on the same data and
-schedule, and compared by **closed-loop rollout** rather than offline loss.
+We test whether frozen features from the robot-adapted **GR00T N1.7** endpoint help a newly trained action policy compared with **Qwen3-VL-2B**, its stock lineage origin. The experiment measures feature usefulness through closed-loop control. Behavioral and action-prediction probes examine where the resulting policies differ.
 
-**Question.** Existing work studies how to choose *data* and how to choose a
-*backbone*. This study asks what happens *between* the components: how backbone
-pretraining, camera configuration, action space and task structure interact to
-decide whether a policy actually succeeds in the loop.
+## Experiment
 
-**Method.** Move one factor at a time and roll out. Every arm shares the head,
-the read depth, the training recipe and the evaluation protocol, so a difference
-in success rate is attributable to the factor that moved.
+Both backbones are frozen and read at language layer 16. Image/text features are cached, then a token adapter and flow-matching action decoder are trained independently for each backbone with seeds **3, 4, and 5**. Head architectures, demonstration splits, and evaluation conditions are matched **within each benchmark**.
 
-See [OBJECTIVE.md](docs/OBJECTIVE.md) for the framing and [RESULTS.md](docs/RESULTS.md)
-for the full design, hypotheses, statistics and limitations.
-
----
-
-## The arms
-
-Two backbones, one lineage — stock **Qwen3-VL-2B** → Cosmos-Reason2-2B →
-**GR00T N1.7**. Both hops are verified real finetunes (584/625 and 476/493
-tensors differ), so the pair spans the whole robot-pretraining treatment. Both
-are read at **layer 16**, which is GR00T's own `select_layer` and intermediate
-for Qwen3-VL; the language stack's final RMSNorm is applied to the intermediate
-read so the pair differs by weights and not by normalisation.
-
-| Testbed | Arm | Backbone | Views | Val loss | Success rate |
-|---|---|---|---|---|---|
-| LIBERO-Goal | exp03 | GR00T N1.7 | 1 | 0.0316 | 62.5% (n=200) |
-| LIBERO-Goal | exp04 | Qwen3-VL-2B | 1 | 0.0332 | 68.0% (n=200) |
-| LIBERO-Goal | exp05 | GR00T N1.7 | **2** | 0.0352 | **91.5%** (n=200) |
-| LIBERO-Goal | exp06 | Qwen3-VL-2B | **2** | 0.0352 | **89.0%** (n=200) |
-| ALOHA transfer-cube | exp05 | GR00T N1.7 | 1 | 0.0171 | **61.25%** (n=400) |
-| ALOHA transfer-cube | exp06 | Qwen3-VL-2B | 1 | 0.0179 | 51.75% (n=400) |
-
----
-
-## Findings
-
-### 1. Cameras dominate backbones
-
-On LIBERO-Goal, adding the wrist camera is worth **+29.0 points** (GR00T) and
-**+21.0 points** (Qwen3-VL), p < 10⁻⁷. Swapping a robot-pretrained backbone for
-its stock root, at the benchmark's own two-camera spec, is worth **2.5 points**
-(91.5% vs 89.0%, p = 0.40).
-
-An order of magnitude separates the observation configuration from the backbone.
-
-### 2. The backbone null is bounded — it does not survive a bimanual task
-
-ALOHA transfer-cube, n = 400 per arm (two independent 200-episode runs on
-disjoint seed ranges):
-
-| Arm | Run 1 | Run 2 | Pooled | Wilson 95% CI |
+| Benchmark | Inputs and control | Head | Final checkpoint | Held-out tests per head |
 |---|---|---|---|---|
-| GR00T N1.7 | 60.0% | 62.5% | **61.25%** (245/400) | [56.4, 65.9] |
-| Qwen3-VL-2B | 49.0% | 54.5% | 51.75% (207/400) | [46.9, 56.6] |
+| ALOHA Transfer Cube | One camera, fixed instruction, bimanual 14-DOF joint control | 14.0M trainable parameters | Epoch 250 | 200 |
+| LIBERO-Goal | Agent and wrist cameras, ten familiar instruction-conditioned goals, single-arm end-effector control | 19.2M trainable parameters | Epoch 120 | 400: 40 per task |
 
-**+9.5 points, z = 2.71, p = 0.0067** — clears the Bonferroni bar for the six
-comparisons in this study (0.05/6 = 0.0083). The intervals do not overlap.
+The lineage includes Cosmos-Reason2 between Qwen and GR00T, so the endpoint comparison cannot isolate one pretraining stage. ALOHA and LIBERO differ in several ways at once; they do not isolate the effects of language, vision, camera count, or embodiment.
 
-The gap is **one transition**, not general competence. ALOHA scores
-touch / lift / handover / success, and `max_reward == 3` never occurs in 800
-episodes, so the ladder is effectively touch → lift → handover:
+## Completed progression results
 
-| Stage | GR00T | Qwen3-VL | Δ | p |
-|---|---|---|---|---|
-| P(touch) | 89.2% | 92.5% | −3.3 | 0.11 |
-| P(lift \| touch) | 95.8% | 93.8% | +2.0 | 0.22 |
-| **P(handover \| lift)** | **71.6%** | **59.7%** | **+12.0** | **0.0009** |
+| Benchmark | Backbone | Seed 3 | Seed 4 | Seed 5 | Three-seed mean |
+|---|---|---:|---:|---:|---:|
+| ALOHA | GR00T | 49.5% | 42.5% | 64.5% | **52.2%** |
+| ALOHA | Qwen | 34.5% | 18.0% | 33.5% | **28.7%** |
+| LIBERO-Goal | GR00T | 89.0% | 88.8% | 91.8% | **89.8%** |
+| LIBERO-Goal | Qwen | 89.8% | 91.8% | 88.0% | **89.8%** |
 
-Both early stages run slightly *against* the pretrained arm. The advantage is
-localised to the one stage bimanual pretraining plausibly covers, and the
-localisation is tighter than the top-line result.
+GR00T leads in all three ALOHA seed pairs. LIBERO has equal aggregate means and mixed seed directions. The independent training replicates are the three heads per backbone; checkpoints and rollouts from one head are not additional training replicates. Paired-start bootstrap intervals are conditional on the trained heads.
 
-### 3. Pretraining buys ~2× training efficiency, and the gap does not close
+ALOHA stage analysis shows more GR00T completions among episodes reaching reward 2. On selected matched starts where both reach reward 2 and only GR00T succeeds, Qwen reaches that stage later. Two selected extended Qwen timeouts succeed beyond the original 400-step limit. LIBERO comparisons of two selected familiar goals favor Qwen on wine-to-rack and GR00T or a tie on cheese-to-bowl across the examined scenes. These diagnostics locate differences without establishing their cause inside the features.
 
-Closed-loop checkpoint ladder, paired seeds, 50 episodes per point:
+Validation flow loss reaches its minimum early while development success often improves later; it does not reliably rank checkpoint success in these runs.
 
-| Epoch | 25 | 50 | 100 | 150 | 200 | 300 |
-|---|---|---|---|---|---|---|
-| GR00T | 8.0% | 28.0% | 46.0% | 54.0% | 72.0% | 66.0% |
-| Qwen3-VL | **0.0%** | **0.0%** | 22.0% | 28.0% | 48.0% | 46.0% |
+## Rollout examples
 
-The stock backbone scores **0/50 through epoch 50** while the pretrained arm is
-already at 28% (McNemar p = 0.0001), and needs **~2× the epochs** to reach any
-given rate (2.4× / 2.8× / 2.2× / 1.9× at the 20/30/40/46% targets). The gap does
-not close by epoch 300, so pretraining buys both speed and a residual advantage
-— not speed alone.
+### ALOHA Transfer Cube
 
-**But this does not generalise.** The same ladder on LIBERO-Goal (2-view arms,
-n = 100/point, identical fixed initial states) shows no pretraining advantage at
-any checkpoint:
+These videos replay archived final-test actions. Both policies start from the same reset within each row. Reset hashes and every recorded robot state and reward were verified. The two starts were selected to show opposite outcomes; they are illustrative, not a new evaluation cohort.
 
-| Epoch | 25 | 50 | 75 | 100 |
-|---|---|---|---|---|
-| GR00T | 61.0% | 83.0% | 85.0% | 85.0% |
-| Qwen3-VL | **77.0%** | 78.0% | 89.0% | **95.0%** |
+| Matched start (seed 3) | GR00T | Qwen |
+|---|---|---|
+| 10097 | **Success**<br>![GR00T ALOHA success](docs/media/rollouts/aloha_seed3_groot_start10097.gif) | **Failure**<br>![Qwen ALOHA failure](docs/media/rollouts/aloha_seed3_qwen3vl_start10097.gif) |
+| 10086 | **Failure**<br>![GR00T ALOHA failure](docs/media/rollouts/aloha_seed3_groot_start10086.gif) | **Success**<br>![Qwen ALOHA success](docs/media/rollouts/aloha_seed3_qwen3vl_start10086.gif) |
 
-At epoch 25 the *stock* arm leads by 16 points — the opposite of ALOHA. Neither
-nominally significant point (p = 0.0195, 0.0213) survives Bonferroni over the
-four comparisons, so the defensible claim is the negative one: no LIBERO
-checkpoint favours the pretrained backbone.
 
-**Robot pretraining is therefore not a general sample-efficiency prior** — its
-payoff is task-specific.
+### LIBERO-Goal
 
-### 4. Offline metrics do not rank these policies
+Selected seed-3 diagnostic reruns from matched starts illustrate the two focal LIBERO goals. These are examples rather than a representative sample; benchmark conclusions use the full final-test cohorts. The recorded rerun outcomes match the archived outcomes for all four clips.
 
-On LIBERO, validation loss **anti-predicts** closed-loop success. On ALOHA it is
-worse than a bad predictor — it is **blind**:
+| Goal and matched start | GR00T | Qwen |
+|---|---|---|
+| Cheese to bowl, task 6, seed 3, start 13 | **Success**![GR00T cheese-to-bowl success](docs/media/rollouts/task6_seed3_groot_start13.gif) | **Failure**![Qwen cheese-to-bowl failure](docs/media/rollouts/task6_seed3_qwen3vl_start13.gif) |
+| Wine to rack, task 9, seed 3, start 28 | **Failure**![GR00T wine-to-rack failure](docs/media/rollouts/task9_seed3_groot_start28.gif) | **Success**![Qwen wine-to-rack success](docs/media/rollouts/task9_seed3_qwen3vl_start28.gif) |
 
-| Measure (stock − pretrained, % of pretrained) | Δ |
-|---|---|
-| velocity loss (overall) | +0.1% |
-| velocity loss (mid phase, contains handover) | +1.9% |
-| open-loop action error (nMAE, 14 dims) | −0.4% |
-| PE sensitivity | +1.1% |
-| attention mass on image | −5.2% |
-| **closed-loop success rate** | **−15.5%** |
+GIF previews loop inline at 8 frames per second. ALOHA previews replay saved actions; LIBERO previews use existing diagnostic recordings. No new policy inference or training was run for the gallery.
 
-Four accuracy measures are flat against a gap resolved at p = 0.0067 with a
-mechanism at p = 0.0009. Selecting a backbone or a checkpoint by flow-matching
-loss would have carried no information about which policy is better.
+## Status and evidence
 
-Instrumented rollouts identify the physical failure: the stock policy's receiving
-gripper **never opens** in 26.2% of lifted episodes against the pretrained arm's
-14.5% (p = 0.0068). That +11.7-point excess accounts for essentially the entire
-11.9-point P(handover | lift) gap — the policy does not aim badly, it fails to
-initiate the receive at all.
+All twelve progression heads and their final tests are complete. The [integrity audit](docs/analysis/provenance/progression_integrity_audit.json) and [seed-level summary](docs/analysis/stage1/stage1_results.json) document the records and checkpoint checks. Operational study-status files are stale; they must not be used to infer missing tests or trigger a restart. This overview does not assert that a campaign process is currently running. No new training or rollout is authorized by these documentation updates.
 
-### 5. Action space determines how much the policy uses vision
+- [Manuscript source](manuscript/main.tex) and [PDF](manuscript/main.pdf)
+- [Research objective](docs/OBJECTIVE.md), [results and evidence](docs/RESULTS.md), and [project guide](docs/README.md)
+- Locked campaign configurations: [ALOHA](configs/runpod_aloha_minimum_250_success_study.json), [LIBERO](configs/libero_progression_120_success_study.json)
 
-Zeroing the 2D positional encoding shifts actions by **0.097–0.111** on LIBERO
-(end-effector control) but only **0.038** on ALOHA (joint control with fully
-observable 14-DOF proprioception) — 2.5–3× less. Where the state already
-determines the arm configuration, the head sources far less from image position.
+Earlier epoch-100 ALOHA and single-seed LIBERO comparisons are separate evidence sets. Do not pool them with progression results or use older camera-ablation and mechanistic claims as current findings.
 
-### 6. Text ablation has a floor, and it must be measured
+## Repository and environments
 
-ALOHA has a single fixed instruction, so zeroing its text tokens removes no task
-information — yet loss still rises **1.14×–1.24×**. That residual is the cost of
-an off-distribution perturbation alone, i.e. the metric's floor. LIBERO arms,
-whose instructions vary across ten goals, read **5.4×–7.4×** against that floor.
-Reporting an ablation ratio without its floor overstates the effect.
+`models/`, `data/`, and `envs/` contain runtime code; `configs/` contains experiment configurations; `scripts/` contains commands; `docs/analysis/` contains analysis tables, JSON summaries, and plots. `manuscript/` contains the paper and its figure assets. Large datasets, weights, caches, checkpoints, and raw rollout records live under ignored `asset/` paths; a clone alone does not reproduce the full experiment.
 
----
+Use the existing `vla` environment for training tools, analysis, and ALOHA; use `vla_libero` for LIBERO simulation. Do not reinstall either environment merely to regenerate figures. See [scripts](scripts/README.md) for command entrypoints. Historical launch instructions are not current execution instructions.
 
-## Architecture
-
+```powershell
+# Help only; no training or simulator episodes.
+python scripts/train.py --help
+python scripts/precompute.py --help
+python scripts/evaluate.py --help
 ```
-PIL image(s) + task text
-       │
-Frozen VLM backbone  ❄  read at layer 16, final RMSNorm applied
-       │  hidden states (B, T, D)
-       │
-VLMTokenAdapter  🔥  ~5.9M params
-  PerTokenLoRA        rank 16,  h' = h + 0.1·B(A(h))
-  SpatialAwareMLP     2D positional encoding (+ per-view embedding when T>1 view)
-  AttentionReadout    T tokens → context vector
-       │  context → adaLN (global)
-       │  tokens  → DiT cross-attention (local, per denoising step)
-       │
-DiTFlowDecoder  🔥  10.1M params
-  16 action tokens, self-attn + cross-attn to the VLM tokens
-  rectified flow:  x_t = (1-t)·x₀ + t·actions,  3-step Euler at inference
-       │
-action chunk → execute inference_horizon steps → replan
-```
-
-Token geometry varies by backbone and view count: Qwen3-VL family **88** tokens
-(64 image, 1 view) or **152** (128 image, 2 views); ALOHA **96** (54 image on a
-6×9 grid).
-
-**Two conditioning pathways.** The readout compresses all tokens to one vector
-that modulates every LayerNorm (global); cross-attention exposes all tokens as
-K,V at every denoising step (local). Removing cross-attention costs +261%
-validation loss — the local pathway is load-bearing.
-
----
-
-## Hard constraints
-
-1. **State = environment observations only** — never action predictions or history.
-2. **`inference_horizon` at inference must equal `inference_horizon` at training.**
-3. **n ≥ 50 rollouts** before any success-rate claim; n ≥ 200 for a comparison.
-4. **Two MuJoCo backends, not interchangeable.** LIBERO/robosuite needs
-   `MUJOCO_GL=wgl`; gym-aloha goes through dm_control, which rejects `wgl` and
-   needs `MUJOCO_GL=glfw`.
-5. **Two conda envs.** `vla` for training, analysis and gym-aloha rollouts;
-   `vla_libero` for the LIBERO simulator, which pins numpy 1.22 and would
-   downgrade numpy under torch if installed into `vla`.
-
----
-
-## Quick start
-
-### LIBERO-Goal arm
-
-```bash
-python scripts/precompute.py --dataset libero --exp exp06
-```
-
-```bash
-python scripts/train.py --dataset libero --exp exp06
-```
-
-```bash
-# Rollouts need the vla_libero env, not vla. 10 tasks x 20 episodes x
-# {canonical, swapped}.
-MUJOCO_GL=wgl python scripts/eval_libero.py --exp exp06 --episodes 20 --conditions canonical swapped
-```
-
-```bash
-# Is the harness itself sound? Replays the demos' own actions through it.
-MUJOCO_GL=wgl python scripts/validate_harness.py
-```
-
-### ALOHA transfer-cube arm
-
-```bash
-python scripts/precompute.py --dataset aloha --exp exp05
-```
-
-```bash
-python scripts/train.py --dataset aloha --exp exp05
-```
-
-```bash
-MUJOCO_GL=glfw python scripts/evaluate.py --dataset aloha --exp exp05 --episodes 200 --no-video
-```
-
-```bash
-# Replication on DISJOINT scenes. AlohaEnv.reset derives the cube pose from the
-# episode seed alone, so without --seed-offset a rerun replays the same 200
-# initial scenes and resamples only the policy's flow noise.
-MUJOCO_GL=glfw python scripts/evaluate.py --dataset aloha --exp exp05 --episodes 200 --no-video --seed-offset 1000 --output asset/runs/aloha/exp05_groot_transfer/sim_results_rep.json
-```
-
-```bash
-# One point of the checkpoint ladder. Hold --seed-offset fixed across every
-# snapshot so the curve is paired.
-MUJOCO_GL=glfw python scripts/evaluate.py --dataset aloha --exp exp05 --checkpoint asset/runs/aloha/exp05_groot_transfer/checkpoints/epoch_0100.pt --episodes 50 --no-video --seed-offset 2000
-```
-
-### Head diagnostics
-
-Inference-only on the cached embeddings — no backbone is loaded, nothing
-retrains. Covers adapter probes, cross-attention mass and entropy, text
-ablation, PE sensitivity, phase/task loss, per-dimension error, and an
-open-loop checkpoint ladder.
-
-```bash
-python scripts/analysis/head_diagnostics.py --dataset libero
-```
-
-```bash
-python scripts/analysis/head_diagnostics.py --dataset aloha
-```
-
-```bash
-python scripts/analysis/plots_head_diagnostics_aloha.py
-```
-
-### Report
-
-```bash
-python scripts/report/build_report.py   # -> external generated/report/
-```
-
----
-
-## Project structure
-
-```text
-├── README.md                 # Overview and historical results
-├── plan.md                   # Active camera-ready plan
-├── requirements.txt          # Core dependencies
-├── experiment_protocol.py    # Shared data/seed/provenance checks
-├── configs/                  # Base config + benchmark experiment registry
-├── models/                   # Runtime backbone loader, adapter, action heads
-├── data/                     # Dataset and HDF5 embedding-cache loaders
-├── envs/                     # Simulator wrappers and policy agents
-├── scripts/                  # Canonical pipeline commands
-│   ├── prepare_protocol.py
-│   ├── precompute.py
-│   ├── train.py
-│   ├── evaluate.py / eval_libero.py / offline_eval.py
-│   ├── analysis/             # Diagnostics, probes, paired reporting
-│   ├── validation/ / eval/   # Harness and evaluation studies
-│   ├── data/                 # Download/conversion utilities
-│   ├── plots/ / media/ / report/
-│   └── archive/              # Historical exploratory scripts
-├── tests/                    # Synthetic checks; no experiment execution
-├── docs/                     # Research records, revision workflow, review matrix
-├── manuscript/               # main.tex, outline.md, README.md
-├── (external output directory) # Generated reports and archived run artifacts
-├── baselines/                # Separate baseline reproductions
-├── train.py / inference.py / precompute_embeddings.py / config_loader.py
-│                             # Legacy commands/imports only
-├── asset/                    # Ignored; existing paths retained
-│   ├── models/               # Frozen backbone weights and processors
-│   ├── data/                 # Demonstration datasets
-│   ├── runs/                 # Caches, checkpoints, rollout results, protocols
-│   └── analysis/             # Diagnostics and figures
-└── third_party/              # Ignored upstream checkouts
-```
-
----
-
-## Baselines
-
-- **[SmolVLA on LIBERO](baselines/smolvla_libero/)** — a full-finetuning VLA
-  reference reproduced on LIBERO-Spatial via `lerobot`: **76.0% SR** (100
-  rollouts). Documents a reproducibility caveat (the paper's ~87–90% does not
-  reproduce ecosystem-wide) and the hf-libero / robosuite setup gotchas.

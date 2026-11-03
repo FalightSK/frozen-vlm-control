@@ -1,3 +1,5 @@
+> **Status update:** This document records an earlier workflow or evidence set. The completed three-seed ALOHA epoch-250 and LIBERO epoch-120 progression is summarized in [RESULTS.md](RESULTS.md). Historical launch commands and live-worker notices below are not current execution instructions.
+
 # Reviewer response implementation matrix
 
 Status (20 October 2026): all six ALOHA policies (three independent training seeds per backbone) pass the locked verifier. LIBERO is deferred at the user's request pending a RunPod environment. Its GR00T seed-3 embedding cache completed and passed provenance, geometry, finite-value, and parity checks, but the worker stopped during preflight before policy training or evaluation. The coordinator and monitor are paused; six of 12 planned policy evaluations are verified. Combined cross-benchmark analysis remains pending, and no new LIBERO policy result is available.

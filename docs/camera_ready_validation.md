@@ -1,3 +1,5 @@
+> **Status update:** This document records an earlier workflow or evidence set. The completed three-seed ALOHA epoch-250 and LIBERO epoch-120 progression is summarized in [RESULTS.md](RESULTS.md). Historical launch commands and live-worker notices below are not current execution instructions.
+
 # Camera-ready implementation and validation record
 
 Date: 18 October 2026 (JST).

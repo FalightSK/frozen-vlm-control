@@ -1,10 +1,14 @@
-# Action-Omni team walkthrough and continuity guide
+> **Status update:** This document records an earlier workflow or evidence set. The completed three-seed ALOHA epoch-250 and LIBERO epoch-120 progression is summarized in [RESULTS.md](RESULTS.md). Historical launch commands and live-worker notices below are not current execution instructions.
+
+# frozen-vlm-control: team continuity guide
 
 > **Current operations notice (20 October 2026):** Production RunPod actions are
 > MCP-only and use `scripts/runpod_bootstrap.py` with the v3
 > `scripts/runpod_success_study.py` runner. SSH/nohup commands and the older
 > update-matched study details below are historical notes, not current launch
 > instructions.
+
+Historical `action-omni` directory and worker names below are retained as recorded artifact locations; the current project name is `frozen-vlm-control`.
 
 **Status snapshot:** 20 October 2026. The live Pod state below was checked during this session. Refresh it from the RunPod logs before making operational decisions.
 
