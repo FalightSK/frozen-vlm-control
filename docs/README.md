@@ -21,16 +21,18 @@ checkpoints, so no `src/` migration or additional packaging layer is needed.
 | `tests/` | Synthetic protocol, statistics, import, and command regression checks. |
 | `docs/` | Research notes, camera-ready workflow, validation, and review tracking. |
 | `manuscript/` | Editable LaTeX source, manuscript notes, and outline. |
-| `report/` | Saved/generated reports and protocol summaries. |
-| `asset/` | Ignored datasets, weights, caches, checkpoints, and rollout artifacts. |
-| `asset/protocols/`, `asset/cache/`, `asset/runs/episode_holdout/` | Immutable protocol copies, reusable features, and seed-specific runs. |
-| `docs/camera_ready_evidence/` | Compact numerical diagnostics kept independently of run output. |
+| External report output | Generated reports, kept outside the source repository. |
+| `asset/` | Local datasets, pretrained weights, feature caches, protocol manifests, run outputs, and durable evaluation/recovery state. See the [asset layout](ASSET_LAYOUT.md). |
+| `asset/cache/`, `asset/data/`, `asset/models/` | Reusable frozen features, local datasets, and pretrained backbone snapshots. |
+| `asset/protocols/`, `asset/runs/`, `asset/durable/` | Immutable episode-split manifests, experiment outputs, and durable evaluation/recovery records. |
+| External evidence archive | Numerical diagnostics from the earlier camera-ready check. |
 | `baselines/` | Separate baseline reproduction instructions and scripts. |
 | `third_party/` | Ignored local upstream checkouts. |
 
-The root `plan.md` remains the active camera-ready plan. The editor's
-`manuscript/main.tex` path is unchanged. Historical assets are retained; new
-experiments use the execution layout described in [commands](../scripts/README.md).
+The root `plan.md` remains the active camera-ready plan. Historical generated
+files are archived outside the repository. The editor's
+`manuscript/main.tex` path is unchanged. New experiments use the execution
+layout described in [commands](../scripts/README.md).
 
 The live two-Pod RunPod deployment, durable storage paths, status commands,
 recovery rules, and post-run analysis steps are recorded in the

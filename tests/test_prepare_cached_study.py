@@ -24,7 +24,7 @@ class PrepareCachedStudyTests(unittest.TestCase):
             durable_root = Path(tmp)
             local, durable = cache_paths(durable_root, "study_1", "aloha", "exp05")
             self.assertTrue(local.as_posix().endswith(
-                "/asset/cache/cached_success_study/study_1/aloha/exp05/vlm_embeddings.h5"))
+                "/asset/cache/precomputed/aloha/exp05/vlm_embeddings.h5"))
             self.assertEqual(
                 durable,
                 (durable_root / "success_studies/study_1/feature_caches/aloha/exp05"

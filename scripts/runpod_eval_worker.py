@@ -26,7 +26,7 @@ import torch
 import numpy as np
 
 from experiment_protocol import digest, file_digest
-from scripts.run_log import log_event, write_json_atomic
+from scripts.run_log import log_event, replace_with_retry, write_json_atomic
 from scripts.success_queue import validate_rollout_result
 
 _VERIFIED_ASSETS: dict[tuple[str, int, int, str], bool] = {}
@@ -66,7 +66,7 @@ def safe_relative(root: Path, relative: str) -> Path:
     return resolved
 
 
-def discover_tasks(durable_root: Path) -> list[tuple[Path, dict]]:
+def discover_tasks(durable_root: Path, study_id: str | None = None) -> list[tuple[Path, dict]]:
     task_root = durable_root / "evaluation_tasks"
     if not task_root.is_dir():
         return []
@@ -80,6 +80,8 @@ def discover_tasks(durable_root: Path) -> list[tuple[Path, dict]]:
                 raise ValueError("unsupported schema or task not ready")
             if not task.get("task_id"):
                 raise ValueError("task id is missing")
+            if study_id is not None and task.get("study_id") != study_id:
+                continue
             tasks.append((path, task))
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             if path.as_posix() not in _SEEN_MANIFEST_WARNINGS:
@@ -172,7 +174,7 @@ def validate_task_checkpoint(task: dict, durable_root: Path) -> tuple[Path, dict
     return checkpoint_path, checkpoint
 
 
-def stage_model_assets(task: dict, durable_root: Path) -> None:
+def stage_model_assets(task: dict, assets_root: Path) -> None:
     assets = task.get("source_assets")
     if not isinstance(assets, dict) or not assets:
         raise ValueError("Task has no locked model asset manifest")
@@ -183,7 +185,7 @@ def stage_model_assets(task: dict, durable_root: Path) -> None:
             # Evaluation never needs the training dataset or embedding cache.
             raise ValueError(f"Task references a non-model runtime asset: {key}")
         source_rel = PurePosixPath(*source_key.parts[1:]).as_posix()
-        source = safe_relative(durable_root / "assets", source_rel)
+        source = safe_relative(assets_root, source_rel)
         if not source.is_file():
             raise SharedArtifactPending(f"Shared model asset is not visible yet: {source}")
         try:
@@ -212,7 +214,7 @@ def stage_model_assets(task: dict, durable_root: Path) -> None:
             shutil.copyfile(source, temporary)
             if file_digest(temporary) != expected_sha:
                 raise IOError(f"Model asset copy failed verification: {key}")
-            os.replace(temporary, destination)
+            replace_with_retry(temporary, destination)
         finally:
             if temporary.exists():
                 temporary.unlink()
@@ -324,7 +326,7 @@ def validate_trajectory(path: Path, task: dict, result: dict) -> None:
             prefix = f"ep{index:04d}_"
             if not all(prefix + key in archive for key in ("state", "next_state", "action", "reward")):
                 raise ValueError(f"Trajectory episode {index} is missing state/action/reward arrays")
-        if any(key.endswith("attn_image_mass") for key in archive.files):
+        if any(key.endswith("attn_image_mass") and archive[key].size for key in archive.files):
             raise ValueError("Trajectory-only capture unexpectedly contains attention weights")
 
 
@@ -384,7 +386,8 @@ def retry_delay(status_path: Path, base_seconds: float, max_seconds: float) -> t
 
 
 def evaluate_one(task_file: Path, task: dict, durable_root: Path, work_root: Path,
-                 aloha_python: str, libero_python: str, aloha_gl: str = "glfw") -> bool:
+                 aloha_python: str, libero_python: str, aloha_gl: str = "glfw",
+                 assets_root: Path | None = None) -> bool:
     status_path = task_status_path(durable_root, task)
     if published_result_matches(durable_root, task):
         write_worker_status(status_path, {"task_id": task["task_id"], "status": "complete",
@@ -408,7 +411,7 @@ def evaluate_one(task_file: Path, task: dict, durable_root: Path, work_root: Pat
               optimizer_step=task["optimizer_step"])
     try:
         checkpoint_path, checkpoint = validate_task_checkpoint(task, durable_root)
-        stage_model_assets(task, durable_root)
+        stage_model_assets(task, assets_root or (durable_root / "assets"))
         local_root = work_root / hashlib.sha256(task["task_id"].encode("utf-8")).hexdigest()
         run_dir = local_root / "run"
         local_checkpoint = run_dir / "checkpoints" / checkpoint_path.name
@@ -420,55 +423,61 @@ def evaluate_one(task_file: Path, task: dict, durable_root: Path, work_root: Pat
             raise IOError("Local evaluation checkpoint failed digest verification")
         local_result = local_root / "evaluation.json"
         local_trajectory = local_root / "trajectory.npz"
-        if local_result.exists():
-            local_result.unlink()
-        if local_trajectory.exists():
-            local_trajectory.unlink()
-        if task["dataset"] == "aloha":
-            evaluation = task["evaluation"]
-            command = [aloha_python, "-u", str(ROOT / "scripts/evaluate.py"),
-                       "--dataset", "aloha", "--exp", task["experiment"],
-                       "--checkpoint", str(local_checkpoint),
-                       "--episodes", str(evaluation["episodes"]),
-                       "--seed-offset", str(evaluation["seed_offset"]),
-                       "--render-samples", str(evaluation["render_samples"]),
-                       "--no-video", "--output", str(local_result)]
-            if evaluation.get("capture_trajectory"):
-                command.extend(["--trajectory", str(local_trajectory)])
-            gl = aloha_gl
-        else:
-            evaluation = task["evaluation"]
-            command = [libero_python, "-u", str(ROOT / "scripts/eval_libero.py"),
-                       "--exp", task["experiment"], "--checkpoint", local_checkpoint.name,
-                       "--episodes", str(evaluation["episodes_per_task"]),
-                       "--conditions", *map(str, evaluation["conditions"]),
-                       "--tasks", *map(str, evaluation["tasks"]),
-                       "--videos", str(evaluation["videos"]),
-                       "--seed", str(evaluation["environment_seed"]),
-                       "--output-dir", str(run_dir), "--output", str(local_result)]
-            initial_offset = libero_initial_state_offset(evaluation)
-            if initial_offset is not None:
-                command.extend(["--initial-state-offset", str(initial_offset)])
-            gl = "egl"
-        env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1",
-                   CUBLAS_WORKSPACE_CONFIG=":4096:8", MUJOCO_GL=gl)
-        if (task["dataset"] == "aloha" and gl == "glfw"
-                and sys.platform.startswith("linux") and not env.get("DISPLAY")):
-            xvfb = shutil.which("xvfb-run")
-            if xvfb is None:
-                raise RuntimeError("Headless ALOHA needs xvfb-run; run scripts/setup_runpod_eval.sh")
-            command = [xvfb, "-a", *command]
         log_path = local_root / "evaluation.log"
-        write_worker_status(status_path, {"task_id": task["task_id"], "status": "evaluating",
-                                          "updated_utc": stamp(), "log": str(log_path),
-                                          "command": command})
-        log_event("eval.subprocess_started", task_id=task["task_id"], python=command[0],
-                  simulator=task["dataset"], log=str(log_path))
-        with log_path.open("w", encoding="utf-8") as log:
-            completed = subprocess.run(command, cwd=ROOT, env=env, stdout=log,
-                                       stderr=subprocess.STDOUT, check=False)
-        if completed.returncode:
-            raise subprocess.CalledProcessError(completed.returncode, command)
+        reuse_local_result = local_result_matches(local_result, task)
+        if not reuse_local_result:
+            if local_result.exists():
+                local_result.unlink()
+            if local_trajectory.exists():
+                local_trajectory.unlink()
+            if task["dataset"] == "aloha":
+                evaluation = task["evaluation"]
+                command = [aloha_python, "-u", str(ROOT / "scripts/evaluate.py"),
+                           "--dataset", "aloha", "--exp", task["experiment"],
+                           "--checkpoint", str(local_checkpoint),
+                           "--episodes", str(evaluation["episodes"]),
+                           "--seed-offset", str(evaluation["seed_offset"]),
+                           "--render-samples", str(evaluation["render_samples"]),
+                           "--no-video", "--output", str(local_result)]
+                if evaluation.get("capture_trajectory"):
+                    command.extend(["--trajectory", str(local_trajectory)])
+                gl = aloha_gl
+            else:
+                evaluation = task["evaluation"]
+                command = [libero_python, "-u", str(ROOT / "scripts/eval_libero.py"),
+                           "--exp", task["experiment"], "--checkpoint", local_checkpoint.name,
+                           "--episodes", str(evaluation["episodes_per_task"]),
+                           "--conditions", *map(str, evaluation["conditions"]),
+                           "--tasks", *map(str, evaluation["tasks"]),
+                           "--videos", str(evaluation["videos"]),
+                           "--seed", str(evaluation["environment_seed"]),
+                           "--output-dir", str(run_dir), "--output", str(local_result)]
+                initial_offset = libero_initial_state_offset(evaluation)
+                if initial_offset is not None:
+                    command.extend(["--initial-state-offset", str(initial_offset)])
+                gl = ("egl" if sys.platform.startswith("linux") else
+                      "wgl" if sys.platform == "win32" else "glfw")
+            env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1",
+                       CUBLAS_WORKSPACE_CONFIG=":4096:8", MUJOCO_GL=gl)
+            if (task["dataset"] == "aloha" and gl == "glfw"
+                    and sys.platform.startswith("linux") and not env.get("DISPLAY")):
+                xvfb = shutil.which("xvfb-run")
+                if xvfb is None:
+                    raise RuntimeError("Headless ALOHA needs xvfb-run; run scripts/setup_runpod_eval.sh")
+                command = [xvfb, "-a", *command]
+            write_worker_status(status_path, {"task_id": task["task_id"], "status": "evaluating",
+                                              "updated_utc": stamp(), "log": str(log_path),
+                                              "command": command})
+            log_event("eval.subprocess_started", task_id=task["task_id"], python=command[0],
+                      simulator=task["dataset"], log=str(log_path))
+            with log_path.open("w", encoding="utf-8") as log:
+                completed = subprocess.run(command, cwd=ROOT, env=env, stdout=log,
+                                           stderr=subprocess.STDOUT, check=False)
+            if completed.returncode:
+                raise subprocess.CalledProcessError(completed.returncode, command)
+        else:
+            log_event("eval.local_result_reused", task_id=task["task_id"],
+                      result=str(local_result))
         if not local_result_matches(local_result, task):
             raise ValueError("Evaluator output failed checkpoint identity or settings validation")
         result = json.loads(local_result.read_text(encoding="utf-8"))
@@ -493,7 +502,7 @@ def evaluate_one(task_file: Path, task: dict, durable_root: Path, work_root: Pat
                        "validation_metrics": task.get("validation_metrics"),
                        "validation_metrics_sha256": task.get("validation_metrics_sha256"),
                        "trajectory": trajectory_pointer})
-        if task.get("purpose") in {"development_selection", "final_test"}:
+        if task.get("purpose") in {"development_selection", "progress_probe", "final_test"}:
             if task["dataset"] == "aloha":
                 outcomes = [row["is_success"] for row in result["episodes"]]
                 result["success_rate"] = sum(outcomes) / len(outcomes)
@@ -539,7 +548,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--durable-root", type=Path,
                         default=Path(os.environ.get("ACTIONOMNI_DURABLE_ROOT", "/workspace-global/action-omni")))
-    parser.add_argument("--work-root", type=Path, default=ROOT / "asset/eval_worker")
+    parser.add_argument("--study-id", type=str,
+                        help="Only evaluate tasks belonging to this study")
+    parser.add_argument("--assets-root", type=Path,
+                        help="Optional local model asset root; defaults to <durable-root>/assets")
+    parser.add_argument("--work-root", type=Path, default=ROOT / "asset/evaluation_scratch")
     parser.add_argument("--aloha-python", default=sys.executable,
                         help="Python executable with gym-aloha simulator dependencies")
     parser.add_argument("--libero-python", default=sys.executable,
@@ -557,13 +570,14 @@ def main(argv: list[str] | None = None) -> int:
             or args.retry_max_seconds < args.retry_base_seconds:
         parser.error("Polling/retry delays must be positive and retry maximum >= retry base")
     durable_root = args.durable_root.resolve()
+    assets_root = (args.assets_root or (durable_root / "assets")).resolve()
     work_root = args.work_root.resolve()
     if not durable_root.is_dir():
         parser.error(f"Durable root is not mounted or does not exist: {durable_root}")
     work_root.mkdir(parents=True, exist_ok=True)
     log_event("eval.worker_started", durable_root=str(durable_root), work_root=str(work_root),
               aloha_python=args.aloha_python, libero_python=args.libero_python,
-              aloha_gl=args.aloha_gl,
+              aloha_gl=args.aloha_gl, assets_root=str(assets_root),
               once=args.once, poll_seconds=args.poll_seconds,
               retry_base_seconds=args.retry_base_seconds,
               retry_max_seconds=args.retry_max_seconds)
@@ -574,7 +588,7 @@ def main(argv: list[str] | None = None) -> int:
     total_ok = total_failed = 0
     idle_logged = False
     while True:
-        task_entries = discover_tasks(durable_root)
+        task_entries = discover_tasks(durable_root, args.study_id)
         dispatched = False
         for task_file, task in task_entries:
             if task["task_id"] in completed_task_ids:
@@ -602,7 +616,8 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             try:
                 ok = evaluate_one(task_file, task, durable_root, work_root,
-                                  args.aloha_python, args.libero_python, args.aloha_gl)
+                                  args.aloha_python, args.libero_python, args.aloha_gl,
+                                  assets_root)
             except Exception as exc:
                 retryable = isinstance(exc, SharedArtifactPending)
                 log_event("eval.task_dispatch_deferred", level="WARNING", path=str(task_file),

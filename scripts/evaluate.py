@@ -135,6 +135,8 @@ def _run_aloha(cfg, vlm_model, train_model, device, n_ep, save_video, output_pat
         flat = {}
         for i, t in enumerate(traces):
             for k, v in t.items():
+                if k == "attn_image_mass" and not record_attention:
+                    continue
                 flat[f"ep{i:04d}_{k}"] = v
         flat["n_episodes"] = _np.asarray([len(traces)])
         flat["initial_state_ids"] = _np.asarray([r["initial_state_id"] for r in results])

@@ -68,6 +68,28 @@ def make_job(root: Path, index: int) -> dict:
 
 
 class RunpodSuccessStudyTests(unittest.TestCase):
+    def test_status_file_permission_denial_does_not_fail_study_runner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = root / "progress_runner.json"
+            durable = root / "durable" / "progress_runner.json"
+            local.write_text("{}", encoding="utf-8")
+            status = {"stage": "training", "policy_id": "aloha/exp05/seed_003"}
+            with patch.object(study, "write_json_atomic", side_effect=PermissionError("locked")), \
+                 patch.object(study, "sync_file", side_effect=PermissionError("locked")):
+                study.update_job_status(local, durable, status)
+                study.write_study_status(status, root / "study_status.json",
+                                         root / "durable_study_status.json")
+
+    def test_tree_sync_defers_locked_status_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            source.mkdir()
+            (source / "progress.json").write_text("{}", encoding="utf-8")
+            with patch.object(study, "sync_file", side_effect=PermissionError("locked")):
+                self.assertEqual(study.sync_tree(source, root / "destination"), 0)
+
     def test_sync_tree_skips_checkpoint_alias_and_recovery_in_both_directions(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as tmp:
             root = Path(tmp)
@@ -131,7 +153,7 @@ class RunpodSuccessStudyTests(unittest.TestCase):
             for call in validate.call_args_list:
                 self.assertEqual(call.kwargs["study_id"], "runpod_success_stopped_v6_aloha")
                 self.assertEqual(call.kwargs["plan_id"], plan["cache_source"]["plan_id"])
-                self.assertIn("runpod_success_stopped_v6_aloha", str(call.args[0]))
+                self.assertIn("asset/cache/precomputed/aloha", call.args[0].as_posix())
                 self.assertIn("runpod_success_stopped_v6_aloha", str(call.args[1]))
             for job in jobs:
                 self.assertEqual(job["run"].relative_to(root).parts[0], study_id)

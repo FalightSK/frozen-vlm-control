@@ -1,0 +1,5 @@
+task,modality,n_matched_inputs,cross_backbone_linear_CKA,interpretation
+6,image,40,0.6855935367926967,similarity of sample-to-sample representational geometry; not feature-space alignment
+6,text,40,0.5914541153764553,similarity of sample-to-sample representational geometry; not feature-space alignment
+9,image,40,0.7156381575101757,similarity of sample-to-sample representational geometry; not feature-space alignment
+9,text,40,0.5172873395112287,similarity of sample-to-sample representational geometry; not feature-space alignment

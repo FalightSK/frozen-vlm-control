@@ -42,7 +42,7 @@ sys.path.insert(0, str(ROOT))
 from configs.registry import get_config
 from models.vla_train import VLATrainModel
 from scripts.checkpoint_io import atomic_copy_checkpoint, file_sha256, latest_verified_recovery, publish_recovery_revision
-from scripts.run_log import log_event, write_json_atomic
+from scripts.run_log import log_event, replace_with_retry, write_json_atomic
 
 _FAILURE_CONTEXT: dict = {}
 
@@ -192,6 +192,8 @@ def main(argv: list[str] | None = None) -> None:
                         help="Retain two full-state recovery checkpoints at this interval")
     parser.add_argument("--probe-epochs", type=int, nargs="*", default=[],
                         help="Save inference-only snapshots at completed epochs")
+    parser.add_argument("--save-initial-checkpoint", action="store_true",
+                        help="Save the initialized policy as epoch 0 before any optimizer update")
     parser.add_argument("--rollout-stopping-config", type=Path,
                         help="Locked study JSON enabling simulator-success-based unbounded stopping")
     parser.add_argument("--rollout-durable-root", type=Path,
@@ -240,10 +242,15 @@ def main(argv: list[str] | None = None) -> None:
         if (len(args.rollout_plan_id) != 64
                 or any(character not in "0123456789abcdef" for character in args.rollout_plan_id)):
             raise ValueError("--rollout-plan-id must be a full lowercase SHA-256")
-        rollout_stopping_config = rollout_config["stopping"]
         rollout_dataset_config = rollout_config["datasets"][args.dataset]
-        if rollout_stopping_config.get("maximum_epochs") is not None:
-            raise ValueError("Success-stopped study must not define a maximum epoch limit")
+        rollout_stopping_config = {
+            **rollout_config["stopping"],
+            **rollout_dataset_config.get("stopping", {}),
+        }
+        maximum_epochs = rollout_stopping_config.get("maximum_epochs")
+        if maximum_epochs is not None and (type(maximum_epochs) is not int
+                                           or maximum_epochs < int(rollout_stopping_config["minimum_epochs"])):
+            raise ValueError("maximum_epochs must be an integer at least the configured minimum")
         rollout_feature_mode = rollout_config.get("feature_mode", "online")
         if rollout_feature_mode not in {"online", "cached"}:
             raise ValueError("Success-stopped study feature_mode must be online or cached")
@@ -333,13 +340,16 @@ def main(argv: list[str] | None = None) -> None:
         if args.lr_decay_steps < 1:
             raise ValueError("lr-decay-steps must be positive")
         cfg.lr_decay_epochs = None
+    maximum_epochs = (rollout_stopping_config.get("maximum_epochs")
+                      if rollout_stopping_config is not None else None)
     if (cfg.batch_size < 1 or cfg.num_epochs < 1
             or (args.steps_per_epoch is not None and args.steps_per_epoch < 1)
             or (args.max_steps is not None and args.max_steps < 1)
             or args.checkpoint_every_steps < 1
             or args.log_every_steps < 1
             or (args.cpu_threads is not None and args.cpu_threads < 1)
-            or any(epoch < 1 or epoch > cfg.num_epochs for epoch in args.probe_epochs)
+            or any(epoch < 1 or epoch > (maximum_epochs or cfg.num_epochs)
+                   for epoch in args.probe_epochs)
             or (args.workers is not None and args.workers < 0)):
         raise ValueError("Epochs/batch size must be positive; worker count must be nonnegative")
     if (cfg.early_stop_patience < 1 or cfg.warmup_steps < 0
@@ -347,6 +357,8 @@ def main(argv: list[str] | None = None) -> None:
             or (cfg.lr_decay_epochs is not None and cfg.lr_decay_epochs < 1)
             or not 0 <= cfg.min_epochs <= cfg.num_epochs):
         raise ValueError("Invalid patience/decay/warmup/LR floor; min_epochs must be between 0 and num_epochs")
+    if maximum_epochs is not None and maximum_epochs > cfg.num_epochs:
+        raise ValueError("maximum_epochs cannot exceed the reference training horizon")
     if args.dry_run:
         print(json.dumps({"mode": "dry-run; no training", "config": asdict(cfg),
                           "training_seed": args.seed,
@@ -366,10 +378,18 @@ def main(argv: list[str] | None = None) -> None:
                 "experiment": args.exp, "seed": args.seed,
                 "started_utc": datetime.now(timezone.utc).isoformat()}
 
+    def write_advisory_json(path: Path, payload: dict, *, event: str, **fields) -> None:
+        try:
+            write_json_atomic(path, payload)
+        except PermissionError as exc:
+            log_event(event, level="WARNING", path=str(path), error=str(exc), **fields)
+
     def update_progress(stage: str, **fields) -> None:
         progress.update(status="running", stage=stage,
                         updated_utc=datetime.now(timezone.utc).isoformat(), **fields)
-        write_json_atomic(progress_path, progress)
+        # The JSON status sidecar is advisory; stdout logs and checkpoints are authoritative.
+        write_advisory_json(progress_path, progress,
+                            event="training.progress_write_deferred", stage=stage)
 
     requested_cache = args.cache or cfg.embeddings_cache
     cache_path = None if args.online_encoder else requested_cache
@@ -522,6 +542,34 @@ def main(argv: list[str] | None = None) -> None:
                 img_mask = img_mask.to(device, non_blocking=on_cuda)
         return embed, state, actions, img_mask
 
+    def measure_initial_losses() -> tuple[float, float]:
+        """Measure epoch-0 train/validation losses without advancing training RNGs."""
+        generators = (train_generator, val_generator, worker_generator)
+        generator_states = [generator.get_state() if generator is not None else None
+                            for generator in generators]
+        train_loss = validation_loss = 0.0
+        train_count = validation_count = 0
+        try:
+            model.train()
+            with fixed_rng(4242), torch.no_grad():
+                for batch in train_loader:
+                    embed, state, actions, img_mask = model_batch(batch)
+                    count = len(state)
+                    train_loss += model(embed, state, actions, img_mask).item() * count
+                    train_count += count
+                model.eval()
+                for batch in val_loader:
+                    embed, state, actions, img_mask = model_batch(batch)
+                    count = len(state)
+                    validation_loss += model(embed, state, actions, img_mask).item() * count
+                    validation_count += count
+        finally:
+            for generator, state in zip(generators, generator_states):
+                if generator is not None:
+                    generator.set_state(state)
+            model.train()
+        return train_loss / train_count, validation_loss / validation_count
+
     # ── Optimiser ─────────────────────────────────────────────────────────
     optim = torch.optim.AdamW([
         {"params": model.adapter.parameters(), "lr": cfg.learning_rate * 0.5},
@@ -554,8 +602,10 @@ def main(argv: list[str] | None = None) -> None:
               log_every_steps=args.log_every_steps)
 
     early_stop_start_epoch = max(1, (cfg.warmup_steps + len(train_loader) - 1) // len(train_loader))
-    maximum_epoch_text = "unbounded (success-rate patience)" if rollout_config is not None \
-        else f"{cfg.num_epochs} epochs ({total_steps:,} steps)"
+    maximum_epoch_text = (f"at most {maximum_epochs} epochs (development-success selection)"
+                          if rollout_config is not None and maximum_epochs is not None else
+                          "unbounded (success-rate patience)" if rollout_config is not None else
+                          f"{cfg.num_epochs} epochs ({total_steps:,} steps)")
     print(f"\n[3/4] Warmup/cosine to floor: {decay_epochs} reference epochs ({decay_steps:,} steps); "
           f"training limit: {maximum_epoch_text}")
     print(f"   Peak LR: adapter={cfg.learning_rate*0.5:.1e}  decoder={cfg.learning_rate:.1e}\n")
@@ -722,7 +772,7 @@ def main(argv: list[str] | None = None) -> None:
             payload["success_stopping_state"] = rollout_controller.state_dict()
         tmp = ckpt_dir / "last.pt.tmp"
         torch.save(payload, tmp)
-        tmp.replace(last_path)
+        replace_with_retry(tmp, last_path)
         if rollout_controller is not None:
             revision_path = publish_recovery_revision(last_path, durable_last_path.parent,
                                                      epoch, recovery_revision)
@@ -730,12 +780,16 @@ def main(argv: list[str] | None = None) -> None:
             for name in ("history.jsonl", "training_curve.png"):
                 artifact = Path(cfg.output_dir) / name
                 if artifact.is_file():
-                    atomic_copy_checkpoint(artifact, durable_counterpart(artifact))
+                    try:
+                        atomic_copy_checkpoint(artifact, durable_counterpart(artifact))
+                    except PermissionError as exc:
+                        log_event("training.durable_diagnostic_sync_deferred", level="WARNING",
+                                  path=str(artifact), error=str(exc))
             log_event("training.durable_last_committed", path=str(revision_path),
                       sha256=durable_sha, epoch=epoch, optimizer_step=global_step,
                       immutable_recovery_path=str(revision_path),
                       recovery_revision=recovery_revision)
-            write_json_atomic(rollout_state_path, {
+            write_advisory_json(rollout_state_path, {
                 "schema": 1, "study_id": args.rollout_study_id,
                 "plan_id": args.rollout_plan_id, "dataset": args.dataset,
                 "experiment": args.exp, "training_seed": args.seed,
@@ -743,12 +797,34 @@ def main(argv: list[str] | None = None) -> None:
                 "last_committed_epoch": epoch,
                 "last_committed_recovery_revision": recovery_revision,
                 "success_stopping_state": rollout_controller.state_dict(),
-                "updated_utc": datetime.now(timezone.utc).isoformat()})
+                "updated_utc": datetime.now(timezone.utc).isoformat()},
+                event="training.rollout_state_mirror_deferred", stage="checkpoint_commit")
         log_event("training.checkpoint_complete", kind="recovery", path=str(last_path),
                   bytes=last_path.stat().st_size, epoch=epoch, optimizer_step=global_step,
                   recovery_revision=recovery_revision,
                   rollout_pending=(rollout_controller.pending is not None
                                    if rollout_controller is not None else None))
+
+    def is_rollout_midpoint_epoch(epoch: int) -> bool:
+        if rollout_controller is None:
+            return False
+        cadence = rollout_controller.evaluation_every_epochs
+        return (cadence > 1
+                and (epoch - rollout_controller.minimum_epochs) % cadence == cadence // 2)
+
+    def save_policy_checkpoint(path: Path, epoch: int, val_loss: float | None) -> None:
+        """Save weights and evaluation metadata without optimizer/resume state."""
+        payload = {**metadata, "epoch": epoch, "global_step": global_step,
+                   "optimizer_step": global_step, "state_dict": model.state_dict(),
+                   "validation_metrics": validation_metrics, "val_loss": val_loss}
+        temporary = path.with_name(path.name + ".tmp")
+        torch.save(payload, temporary)
+        replace_with_retry(temporary, path)
+        if rollout_controller is not None:
+            atomic_copy_checkpoint(path, durable_counterpart(path))
+        log_event("training.policy_checkpoint_saved", kind=path.stem,
+                  path=str(path), epoch=epoch, optimizer_step=global_step,
+                  bytes=path.stat().st_size)
 
     restore_durable_recovery_if_newer()
     if last_path.exists() and not args.fresh:
@@ -838,7 +914,7 @@ def main(argv: list[str] | None = None) -> None:
                           sha256=file_sha256(revision_path), epoch=int(ck["epoch"]),
                           optimizer_step=global_step, immutable_recovery_path=str(revision_path),
                           recovery_revision=recovery_revision)
-                write_json_atomic(rollout_state_path, {
+                write_advisory_json(rollout_state_path, {
                     "schema": 1, "study_id": args.rollout_study_id,
                     "plan_id": args.rollout_plan_id, "dataset": args.dataset,
                     "experiment": args.exp, "training_seed": args.seed,
@@ -846,7 +922,8 @@ def main(argv: list[str] | None = None) -> None:
                     "last_committed_epoch": int(ck["epoch"]),
                     "last_committed_recovery_revision": recovery_revision,
                     "success_stopping_state": rollout_controller.state_dict(),
-                    "updated_utc": datetime.now(timezone.utc).isoformat()})
+                    "updated_utc": datetime.now(timezone.utc).isoformat()},
+                    event="training.rollout_state_mirror_deferred", stage="resume")
     elif args.fresh and last_path.exists():
         print("[--fresh] ignoring existing last.pt; training from epoch 1.")
     elif rollout_controller is not None and rollout_state_path.is_file():
@@ -931,7 +1008,7 @@ def main(argv: list[str] | None = None) -> None:
             path.parent.mkdir(parents=True, exist_ok=True)
             temp = path.with_name(path.name + ".tmp")
             torch.save(selection, temp)
-            temp.replace(path)
+            replace_with_retry(temp, path)
         checkpoint_sha = file_digest(path)
         if rollout_controller is not None:
             atomic_copy_checkpoint(path, durable_counterpart(path), checkpoint_sha)
@@ -1046,8 +1123,26 @@ def main(argv: list[str] | None = None) -> None:
                                   best_development_epoch=transition["best_epoch"],
                                   last_development_evaluation_task=task["task_id"],
                                   updated_utc=datetime.now(timezone.utc).isoformat())
-            write_json_atomic(manifest_path, manifest_state)
+            write_advisory_json(manifest_path, manifest_state,
+                                event="training.manifest_write_deferred", stage="rollout_result")
         return transition
+
+    def publish_progress_rollout(checkpoint_path: Path, epoch: int) -> None:
+        """Queue a matched-cohort diagnostic rollout without blocking training."""
+        if rollout_controller is None:
+            return
+        from scripts.success_queue import publish_rollout_task
+        task_metadata = {**metadata, "experiment": args.exp, "backbone": cfg.vlm_backbone,
+                         "optimizer_step": global_step,
+                         "checkpoint_tag": f"progress_epoch_{epoch:06d}",
+                         "selection_epoch": epoch}
+        task = publish_rollout_task(
+            cfg, task_metadata, checkpoint_path,
+            rollout_dataset_config["development_evaluation"], "progress_probe",
+            args.rollout_plan_id, args.rollout_study_id, args.rollout_durable_root)
+        log_event("training.progress_rollout_submitted", task_id=task["task_id"],
+                  epoch=epoch, optimizer_step=global_step,
+                  checkpoint_sha256=task["checkpoint"]["sha256"])
 
     def finalize_rollout_selection() -> dict:
         if rollout_controller is None or rollout_controller.state["best_checkpoint_path"] is None:
@@ -1072,7 +1167,7 @@ def main(argv: list[str] | None = None) -> None:
             shutil.copyfile(source, temp)
             if file_digest(temp) != source_sha:
                 raise IOError("selected.pt copy failed SHA-256 verification")
-            temp.replace(selected_path)
+            replace_with_retry(temp, selected_path)
         summary = {
             "schema": 1, "study_id": args.rollout_study_id,
             "plan_id": args.rollout_plan_id, "dataset": args.dataset,
@@ -1100,15 +1195,54 @@ def main(argv: list[str] | None = None) -> None:
         log_event("training.rollout_selection_finalized", **summary)
         return summary
 
+    initial_checkpoint = ckpt_dir / "focus_epoch_000000.pt"
+    if args.save_initial_checkpoint:
+        if start_epoch == 1:
+            initial_train_loss, initial_validation_loss = measure_initial_losses()
+            validation_metrics = {
+                "flow_matching_loss": initial_validation_loss,
+                "n_samples": len(val_ds), "protocol_id": protocol["protocol_id"] if protocol else None,
+                "split": "validation_demonstrations", "validation_rng_seed": 4242,
+                "action_metrics_measured": False, "optimizer_step": global_step,
+            }
+            save_policy_checkpoint(initial_checkpoint, 0, initial_validation_loss)
+            with (Path(cfg.output_dir) / "history.jsonl").open("a", encoding="utf-8") as history:
+                history.write(json.dumps({"epoch": 0, "global_step": 0,
+                                          "train_loss": initial_train_loss,
+                                          "validation_loss": initial_validation_loss,
+                                          "gradient_norm": None,
+                                          "learning_rate": scheduler.get_last_lr()[1],
+                                          "no_improve": 0, "phase": "initialization",
+                                          "validation_metrics": validation_metrics,
+                                          "seconds": 0}) + "\n")
+            log_event("training.initial_losses_measured", epoch=0,
+                      train_loss=round(initial_train_loss, 6),
+                      validation_loss=round(initial_validation_loss, 6),
+                      optimizer_step=global_step)
+            try:
+                from scripts.plot_study_losses import plot_run_losses
+                plot_run_losses(Path(cfg.output_dir))
+            except PermissionError as exc:
+                log_event("training.loss_curve_write_deferred", level="WARNING",
+                          epoch=0, error=str(exc))
+            publish_progress_rollout(initial_checkpoint, 0)
+            log_event("training.initial_policy_checkpoint_saved",
+                      path=str(initial_checkpoint), optimizer_step=global_step)
+        elif not initial_checkpoint.is_file():
+            raise FileNotFoundError("A resumed progression study is missing its epoch-0 checkpoint")
+
     completed_epoch = start_epoch - 1
     if restore_best_checkpoint():
         save_recovery_checkpoint(completed_epoch, validation_metrics.get("flow_matching_loss"))
-    stop_epoch = (None if rollout_config is not None else
+    stop_epoch = (maximum_epochs if rollout_config is not None and maximum_epochs is not None else
+                  None if rollout_config is not None else
                   cfg.num_epochs if completed_epoch < cfg.min_epochs
                   or no_improve < cfg.early_stop_patience else completed_epoch)
-    epoch_iterator = (itertools.count(start_epoch) if rollout_config is not None
-                      else range(start_epoch, stop_epoch + 1))
-    epoch_limit = None if rollout_config is not None else cfg.num_epochs
+    epoch_iterator = (range(start_epoch, maximum_epochs + 1)
+                      if rollout_config is not None and maximum_epochs is not None else
+                      itertools.count(start_epoch) if rollout_config is not None else
+                      range(start_epoch, stop_epoch + 1))
+    epoch_limit = maximum_epochs if rollout_config is not None else cfg.num_epochs
     log_event("training.rollout_controller_ready" if rollout_controller is not None
               else "training.epoch_loop_ready",
               controller_state=(rollout_controller.state_dict()
@@ -1211,7 +1345,9 @@ def main(argv: list[str] | None = None) -> None:
                                           latest_train_loss=round(window_loss / max(window_steps, 1), 6),
                                           updates_per_s=round(updates_per_s, 3),
                                           updated_utc=datetime.now(timezone.utc).isoformat())
-                    write_json_atomic(manifest_path, manifest_state)
+                    write_advisory_json(manifest_path, manifest_state,
+                                        event="training.manifest_write_deferred",
+                                        stage="optimizer_progress")
                 window_started = time.perf_counter()
                 window_steps = 0
                 window_loss = 0.0
@@ -1323,7 +1459,7 @@ def main(argv: list[str] | None = None) -> None:
         if global_step >= next_recovery_step and last_path.exists():
             previous_tmp = ckpt_dir / "previous.pt.tmp"
             shutil.copyfile(last_path, previous_tmp)
-            previous_tmp.replace(ckpt_dir / "previous.pt")
+            replace_with_retry(previous_tmp, ckpt_dir / "previous.pt")
             while next_recovery_step <= global_step:
                 next_recovery_step += args.checkpoint_every_steps
         with (Path(cfg.output_dir) / "history.jsonl").open("a", encoding="utf-8") as history:
@@ -1334,10 +1470,20 @@ def main(argv: list[str] | None = None) -> None:
                                       "phase": phase,
                                       "validation_metrics": validation_metrics,
                                       "seconds": elapsed}) + "\n")
-        with fixed_rng(4242):
-            from scripts.plot_study_losses import plot_run_losses
-            curve_path = plot_run_losses(Path(cfg.output_dir))
-        log_event("training.loss_curve_saved", epoch=epoch, path=str(curve_path))
+        try:
+            with fixed_rng(4242):
+                from scripts.plot_study_losses import plot_run_losses
+                curve_path = plot_run_losses(Path(cfg.output_dir))
+            log_event("training.loss_curve_saved", epoch=epoch, path=str(curve_path))
+        except PermissionError as exc:
+            log_event("training.loss_curve_write_deferred", level="WARNING",
+                      epoch=epoch, error=str(exc))
+        focus_checkpoint_path = None
+        if rollout_controller is not None and epoch in args.probe_epochs:
+            focus_checkpoint_path = ckpt_dir / f"focus_epoch_{epoch:06d}.pt"
+            save_policy_checkpoint(focus_checkpoint_path, epoch, avg_val)
+            if maximum_epochs is None or epoch < maximum_epochs:
+                publish_progress_rollout(focus_checkpoint_path, epoch)
         if (rollout_controller is not None and rollout_controller.pending is not None
                 and rollout_controller.is_evaluation_epoch(epoch)):
             transition = process_pending_rollout(wait=rollout_controller.wait_required(epoch))
@@ -1346,7 +1492,8 @@ def main(argv: list[str] | None = None) -> None:
                 finalize_rollout_selection()
                 break
         if rollout_controller is not None and rollout_controller.evaluation_due(epoch):
-            selection_path = ckpt_dir / f"selection_epoch_{epoch:06d}.pt"
+            selection_path = (focus_checkpoint_path or
+                              ckpt_dir / f"selection_epoch_{epoch:06d}.pt")
             rollout_controller.begin_evaluation(epoch=epoch,
                                                 checkpoint_path=str(selection_path),
                                                 optimizer_step=global_step)
@@ -1371,31 +1518,43 @@ def main(argv: list[str] | None = None) -> None:
                 finalize_rollout_selection()
                 break
 
-        if epoch in args.probe_epochs:
-            torch.save({**metadata, "epoch": epoch, "global_step": global_step,
-                        "optimizer_step": global_step, "state_dict": model.state_dict(),
-                        "validation_metrics": validation_metrics,
-                        "val_loss": avg_val},
-                       ckpt_dir / f"probe_step_{global_step:08d}.pt")
-        elif epoch % cfg.save_every == 0:
-            torch.save({**metadata, "epoch": epoch, "global_step": global_step,
-                        "optimizer_step": global_step, "state_dict": model.state_dict(),
-                        "validation_metrics": validation_metrics,
-                        "val_loss": avg_val}, ckpt_dir / f"epoch_{epoch:04d}.pt")
+        if rollout_controller is None:
+            if epoch in args.probe_epochs:
+                save_policy_checkpoint(ckpt_dir / f"probe_step_{global_step:08d}.pt",
+                                       epoch, avg_val)
+            elif epoch % cfg.save_every == 0:
+                save_policy_checkpoint(ckpt_dir / f"epoch_{epoch:04d}.pt", epoch, avg_val)
+        elif (is_rollout_midpoint_epoch(epoch) and epoch not in args.probe_epochs):
+            save_policy_checkpoint(ckpt_dir / f"midpoint_epoch_{epoch:06d}.pt",
+                                   epoch, avg_val)
+
+    if (rollout_controller is not None and maximum_epochs is not None
+            and completed_epoch >= maximum_epochs):
+        if rollout_controller.pending is not None:
+            process_pending_rollout(wait=True)
+        if rollout_controller.state["best_checkpoint_path"] is None:
+            raise ValueError("Maximum-epoch study ended before a development checkpoint was selected")
+        if not (Path(cfg.output_dir) / "selection_summary.json").is_file():
+            finalize_rollout_selection()
 
     final_checkpoint_started = time.perf_counter()
     update_progress("final_checkpoint", epoch=completed_epoch, optimizer_step=global_step,
                     total_optimizer_steps=total_steps)
     log_event("training.final_checkpoint_started", epoch=completed_epoch,
               optimizer_step=global_step)
-    torch.save({**metadata, "epoch": completed_epoch, "global_step": global_step,
-               "optimizer_step": global_step, "state_dict": model.state_dict(),
-               "validation_metrics": validation_metrics,
-               "val_loss": validation_metrics.get("flow_matching_loss")},
-               ckpt_dir / "final.pt")
-    log_event("training.final_checkpoint_complete", path=str(ckpt_dir / "final.pt"),
-              bytes=(ckpt_dir / "final.pt").stat().st_size,
-              elapsed_s=round(time.perf_counter() - final_checkpoint_started, 3))
+    if rollout_controller is None:
+        torch.save({**metadata, "epoch": completed_epoch, "global_step": global_step,
+                    "optimizer_step": global_step, "state_dict": model.state_dict(),
+                    "validation_metrics": validation_metrics,
+                    "val_loss": validation_metrics.get("flow_matching_loss")},
+                   ckpt_dir / "final.pt")
+        log_event("training.final_checkpoint_complete", path=str(ckpt_dir / "final.pt"),
+                  bytes=(ckpt_dir / "final.pt").stat().st_size,
+                  elapsed_s=round(time.perf_counter() - final_checkpoint_started, 3))
+    else:
+        log_event("training.final_checkpoint_skipped",
+                  reason="the development-selected weights are saved as selected.pt",
+                  epoch=completed_epoch)
     if protocol:
         manifest_state.update(status="complete", completed_epoch=completed_epoch,
                               stop_reason=("development_success_rate_patience" if rollout_stop_requested else
@@ -1407,7 +1566,8 @@ def main(argv: list[str] | None = None) -> None:
         if rollout_controller is not None:
             manifest_state.update(success_stopping_state=rollout_controller.state_dict(),
                                   selection_summary_path=str(Path(cfg.output_dir) / "selection_summary.json"))
-        write_json_atomic(manifest_path, manifest_state)
+        write_advisory_json(manifest_path, manifest_state,
+                            event="training.manifest_write_deferred", stage="complete")
 
     progress.update(status="complete", stage="complete", epoch=completed_epoch,
                     optimizer_step=global_step,
@@ -1415,7 +1575,8 @@ def main(argv: list[str] | None = None) -> None:
                     best_validation_loss=best_val_loss,
                     completed_utc=datetime.now(timezone.utc).isoformat(),
                     elapsed_s=round(time.perf_counter() - run_started, 3))
-    write_json_atomic(progress_path, progress)
+    write_advisory_json(progress_path, progress,
+                        event="training.progress_write_deferred", stage="complete")
     log_event("training.complete", epoch=completed_epoch, optimizer_step=global_step,
               total_optimizer_steps=(None if rollout_config is not None else total_steps),
               reference_optimizer_updates=(total_steps if rollout_config is not None else None),

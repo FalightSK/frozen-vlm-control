@@ -1,0 +1,7 @@
+training_seed,backbone,episodes,right_finger_contact,right_finger_cube_off_table,successful_handoff,score2_episodes,score2_then_score4,share_score2_episodes_later_reaching_score4,success_without_prior_score2,median_steps_from_first_score2_to_first_score4,median_first_right_contact_step
+3,GR00T,200,182,163,99,163,99,0.6073619631901841,0,139.0,152.0
+3,Qwen,200,180,163,69,163,69,0.4233128834355828,0,132.0,151.0
+4,GR00T,200,166,153,85,153,85,0.5555555555555556,0,146.0,145.0
+4,Qwen,200,149,142,36,142,36,0.2535211267605634,0,145.5,146.0
+5,GR00T,200,192,187,129,187,129,0.6898395721925134,0,145.0,147.5
+5,Qwen,200,141,141,67,141,67,0.475177304964539,0,142.0,181.0

@@ -172,6 +172,12 @@ def _recompute_actions_only(cfg, out_path: Path) -> None:
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main(argv: list[str] | None = None) -> None:
+    # Windows may inherit a legacy console code page that cannot print arrows or
+    # other Unicode in progress messages. Avoid aborting a valid cache build
+    # when a status line contains one.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Pre-compute VLM embeddings")
     parser.add_argument("--dataset",          type=str, default="pusht",
                         help="Dataset name: pusht, aloha, language_table, libero, ood")

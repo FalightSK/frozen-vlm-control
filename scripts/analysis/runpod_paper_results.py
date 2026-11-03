@@ -134,7 +134,7 @@ def read_task_results(durable_root: Path, plan: dict, plan_id: str) -> tuple[dic
                     entry["status"] = "unexpected_trajectory_artifact"
                 else:
                     try:
-                        if task.get("purpose") in {"development_selection", "final_test"}:
+                        if task.get("purpose") in {"development_selection", "progress_probe", "final_test"}:
                             result = validate_rollout_result(task, result)
                         rate, successes, denominator = final_success_rate(result, task)
                         entry.update(status="complete", result=result,

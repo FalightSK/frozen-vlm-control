@@ -43,14 +43,28 @@ def cache_source_for_plan(plan: dict, dataset: str, study_id: str,
         "plan_id": "a34bb34e8023bd4d532c62789da3471ae7f9f2d68dfcc1ee22221d80e8ba7907",
         "plan": "configs/runpod_cached_success_study.json",
     }
+    accepted_study_ids = {
+        "runpod_success_stopped_fresh_cached_v1_" + dataset,
+        dataset + "_success_stopped_v1",
+    }
     if (source != expected_source or plan.get("feature_mode") != "cached"
-            or study_id != "runpod_success_stopped_fresh_cached_v1_" + dataset):
+            or (study_id not in accepted_study_ids
+                and not (study_id.startswith(dataset + "_") and Path(study_id).name == study_id))):
         raise ValueError("Fresh cached study requires its isolated namespace and pinned cache source")
     source_path = root / source["plan"]
     source_plan = json.loads(source_path.read_text(encoding="utf-8"))
-    scientific_plan = {key: value for key, value in plan.items()
-                       if key not in {"initialization", "cache_source"}}
-    if (plan_digest(source_plan) != source["plan_id"] or scientific_plan != source_plan):
+    def cache_scientific_plan(value):
+        normalized = json.loads(json.dumps(value))
+        for key in ("initialization", "cache_source", "name", "purpose", "stopping",
+                    "checkpoint_epochs"):
+            normalized.pop(key, None)
+        for dataset_plan in normalized.get("datasets", {}).values():
+            dataset_plan.pop("stopping", None)
+            dataset_plan.pop("checkpoint_epochs", None)
+        return normalized
+
+    if (plan_digest(source_plan) != source["plan_id"]
+            or cache_scientific_plan(plan) != cache_scientific_plan(source_plan)):
         raise ValueError("Fresh study changes the pinned cached scientific plan")
     return source["study_prefix"] + dataset, source["plan_id"], source_path
 

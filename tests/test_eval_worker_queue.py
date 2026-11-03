@@ -18,6 +18,29 @@ from scripts import runpod_eval_worker as worker
 
 
 class EvalWorkerQueueTests(unittest.TestCase):
+    def test_validate_trajectory_allows_empty_attention_trace(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as tmp:
+            path = Path(tmp) / "trajectory.npz"
+            arrays = {
+                "n_episodes": worker.np.array([1]),
+                "initial_state_ids": worker.np.array([4000]),
+                "ep0000_state": worker.np.zeros((1, 14)),
+                "ep0000_next_state": worker.np.zeros((1, 14)),
+                "ep0000_action": worker.np.zeros((1, 14)),
+                "ep0000_reward": worker.np.zeros(1),
+                "ep0000_attn_image_mass": worker.np.array([]),
+            }
+            task = {"evaluation": {"episodes": 1}}
+            result = {"episodes": [{"initial_state_id": 4000}]}
+
+            worker.np.savez(path, **arrays)
+            worker.validate_trajectory(path, task, result)
+
+            arrays["ep0000_attn_image_mass"] = worker.np.array([0.5])
+            worker.np.savez(path, **arrays)
+            with self.assertRaisesRegex(ValueError, "attention weights"):
+                worker.validate_trajectory(path, task, result)
+
     def test_libero_offset_only_legacy_task_does_not_require_ids(self):
         self.assertEqual(worker.libero_initial_state_offset({"initial_state_offset": 10}), 10)
         self.assertEqual(worker.libero_initial_state_offset({"initial_state_ids": [10, 11]}), 10)
@@ -37,11 +60,14 @@ class EvalWorkerQueueTests(unittest.TestCase):
                  "purpose": "development_selection", "created_utc": "2026-10-20T00:01:00+00:00"},
                 {"schema": 1, "status": "ready", "task_id": "dev-old",
                  "purpose": "development_selection", "created_utc": "2026-10-20T00:00:30+00:00"},
+                {"schema": 1, "status": "ready", "task_id": "progress-old",
+                 "purpose": "progress_probe", "queue_priority": 3,
+                 "created_utc": "2026-10-20T00:00:10+00:00"},
             ]
             for index, manifest in enumerate(manifests):
                 (task_dir / f"task-{index}.task.json").write_text(json.dumps(manifest), encoding="utf-8")
             self.assertEqual([task["task_id"] for _, task in worker.discover_tasks(durable)],
-                             ["dev-old", "dev-new", "final-old"])
+                             ["dev-old", "dev-new", "final-old", "progress-old"])
 
             final_first = (root / "final-first.task.json", {
                 "task_id": "final-first", "purpose": "final_test", "dataset": "aloha"})
@@ -60,11 +86,11 @@ class EvalWorkerQueueTests(unittest.TestCase):
                                              "--work-root", str(root / "work"), "--once",
                                              "--retry-base-seconds", "1", "--retry-max-seconds", "1",
                                              "--aloha-gl", "egl"]), \
-                 patch.object(worker, "discover_tasks", side_effect=lambda _root: next(arrivals)), \
+                 patch.object(worker, "discover_tasks", side_effect=lambda _root, _study_id=None: next(arrivals)), \
                  patch.object(worker, "task_status_path", return_value=root / "status.json"), \
                  patch.object(worker, "retry_delay", return_value=(0.0, 0)), \
                  patch.object(worker, "published_result_matches", return_value=True), \
-                 patch.object(worker, "evaluate_one", side_effect=lambda _path, task, *_args: processed.append((task["task_id"], _args[-1])) or True):
+                 patch.object(worker, "evaluate_one", side_effect=lambda _path, task, *_args: processed.append((task["task_id"], _args[-2])) or True):
                 self.assertEqual(worker.main(), 0)
             self.assertEqual(processed, [("final-first", "egl"), ("dev-arrives", "egl"),
                                          ("final-second", "egl")])
@@ -127,7 +153,7 @@ class EvalWorkerQueueTests(unittest.TestCase):
                                              "--work-root", str(root / "work"), "--once",
                                              "--retry-base-seconds", "1", "--retry-max-seconds", "1",
                                              "--aloha-gl", "egl"]), \
-                 patch.object(worker, "discover_tasks", side_effect=lambda _root: next(arrivals)), \
+                 patch.object(worker, "discover_tasks", side_effect=lambda _root, _study_id=None: next(arrivals)), \
                  patch.object(worker, "retry_delay", return_value=(0.0, 0)), \
                  patch.object(worker, "published_result_matches", return_value=True), \
                  patch.object(worker, "evaluate_one", side_effect=evaluate):
@@ -149,7 +175,7 @@ class EvalWorkerQueueTests(unittest.TestCase):
                                              "--work-root", str(root / "work"), "--once",
                                              "--retry-base-seconds", "1", "--retry-max-seconds", "1",
                                              "--aloha-gl", "egl"]), \
-                 patch.object(worker, "discover_tasks", side_effect=lambda _root: next(arrivals)), \
+                 patch.object(worker, "discover_tasks", side_effect=lambda _root, _study_id=None: next(arrivals)), \
                  patch.object(worker, "task_status_path", return_value=status), \
                  patch.object(worker, "published_result_matches", return_value=False), \
                  patch.object(worker, "evaluate_one") as evaluate:

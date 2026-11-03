@@ -1,0 +1,268 @@
+{
+  "scope": "Fixed-checkpoint progression final tests; not the earlier manuscript evidence",
+  "bootstrap": "95% paired-start percentile intervals, conditional on each trained pair; LIBERO resampled within each task",
+  "uncertainty_review": {
+    "resampling_unit": "Matched reset ID; the two backbone outcomes are resampled together. LIBERO resamples separately within each of ten tasks.",
+    "scope": "Intervals describe variation over the evaluated reset cohort and its paired policy-sampling draws conditional on these fixed trained heads. They do not estimate new training-seed variation.",
+    "training_seed_reporting": "Three independent head-training seeds are the reviewer-accepted replication level; report each seed and the direction count.",
+    "multiplicity": "No confirmatory p-values or multiplicity adjustment were used. The per-seed intervals are descriptive; task-level patterns remain exploratory."
+  },
+  "checkpoint_note": "The provenance audit recomputes SHA-256 for all 12 selected checkpoint files and matches each result, locked job, and status record.",
+  "status_reconciliation": "Both status files report training_complete_evaluation_pending, completed_policy_count=5, and six pending final tests. All six final records per dataset exist and pass the integrity audit; the operational status files were left unchanged.",
+  "training_seed_summary": {
+    "aloha": {
+      "training_seeds": [
+        3,
+        4,
+        5
+      ],
+      "per_seed_groot_success_percent": [
+        49.5,
+        42.5,
+        64.5
+      ],
+      "per_seed_qwen_success_percent": [
+        34.5,
+        18.0,
+        33.5
+      ],
+      "per_seed_groot_minus_qwen_pp": [
+        15.0,
+        24.5,
+        31.0
+      ],
+      "mean_paired_difference_pp": 23.5,
+      "sample_sd_of_seed_differences_pp": 8.04673846971554,
+      "difference_range_pp": [
+        15.0,
+        31.0
+      ],
+      "seeds_favoring_groot": 3,
+      "seeds_favoring_qwen": 0,
+      "tied_seeds": 0
+    },
+    "libero": {
+      "training_seeds": [
+        3,
+        4,
+        5
+      ],
+      "per_seed_groot_success_percent": [
+        89.0,
+        88.75,
+        91.75
+      ],
+      "per_seed_qwen_success_percent": [
+        89.75,
+        91.75,
+        88.0
+      ],
+      "per_seed_groot_minus_qwen_pp": [
+        -0.75,
+        -3.0,
+        3.75
+      ],
+      "mean_paired_difference_pp": 0.0,
+      "sample_sd_of_seed_differences_pp": 3.43693177121688,
+      "difference_range_pp": [
+        -3.0,
+        3.75
+      ],
+      "seeds_favoring_groot": 1,
+      "seeds_favoring_qwen": 2,
+      "tied_seeds": 0
+    }
+  },
+  "datasets": {
+    "aloha": [
+      {
+        "dataset": "aloha",
+        "training_seed": 3,
+        "n": 200,
+        "protocol_id": "97fa699cb307366377cec2eb0f29795d967710f9ffe0fea9d1e1c50108b8d537",
+        "both_succeed": 52,
+        "both_fail": 84,
+        "only_left": 47,
+        "only_right": 17,
+        "left_success_rate": 0.495,
+        "right_success_rate": 0.345,
+        "difference_pp": 15.0,
+        "difference_bootstrap95_pp": [
+          7.5,
+          22.5
+        ],
+        "sources": [
+          {
+            "path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_003/final_test.json",
+            "result_sha256": "d340f30301298c80f55a933a054f51b9955a675c651548e1842479e6d76e2091",
+            "recorded_checkpoint_sha256": "0ae489966739422f03ef3ba829c4a36166ac6ac52cfe1657c619dfd3b41f29c0",
+            "cache_id": "3917c35e47f0615bb0f53e26e673668418fc7442f137a48157a75df1b4fb044c"
+          },
+          {
+            "path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_003/final_test.json",
+            "result_sha256": "c24d7cb158ce965391c448144661d52f12ec752b3b47f65dee38c6651ce8ff78",
+            "recorded_checkpoint_sha256": "c9a7958cc8504ab3ac1ab4a99e2df91cc5d516b7b978d4f0ed662ea4d198d7c7",
+            "cache_id": "74aae3e13f2dd0a88b95d018476f528a18b37e879a9d5d38347a80cc7dd2af73"
+          }
+        ]
+      },
+      {
+        "dataset": "aloha",
+        "training_seed": 4,
+        "n": 200,
+        "protocol_id": "97fa699cb307366377cec2eb0f29795d967710f9ffe0fea9d1e1c50108b8d537",
+        "both_succeed": 25,
+        "both_fail": 104,
+        "only_left": 60,
+        "only_right": 11,
+        "left_success_rate": 0.425,
+        "right_success_rate": 0.18,
+        "difference_pp": 24.5,
+        "difference_bootstrap95_pp": [
+          17.0,
+          32.0
+        ],
+        "sources": [
+          {
+            "path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_004/final_test.json",
+            "result_sha256": "7284cfc19eba65ff49858eb9861bceb512785d5e5c6de47a1f0c57cdf2a80e22",
+            "recorded_checkpoint_sha256": "cea382f38025a3b3fe52fc05165d9cb4b6a95da6c939b0c43305aa13669af2e8",
+            "cache_id": "3917c35e47f0615bb0f53e26e673668418fc7442f137a48157a75df1b4fb044c"
+          },
+          {
+            "path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_004/final_test.json",
+            "result_sha256": "803916947afb46e6de53d7d89ceccf875a09b003b2f6f0efeae2635fa847971c",
+            "recorded_checkpoint_sha256": "fb7061c2d53f7897cac1dca83e87d48f83ff27c600ab17f84d75167155f61384",
+            "cache_id": "74aae3e13f2dd0a88b95d018476f528a18b37e879a9d5d38347a80cc7dd2af73"
+          }
+        ]
+      },
+      {
+        "dataset": "aloha",
+        "training_seed": 5,
+        "n": 200,
+        "protocol_id": "97fa699cb307366377cec2eb0f29795d967710f9ffe0fea9d1e1c50108b8d537",
+        "both_succeed": 51,
+        "both_fail": 55,
+        "only_left": 78,
+        "only_right": 16,
+        "left_success_rate": 0.645,
+        "right_success_rate": 0.335,
+        "difference_pp": 31.0,
+        "difference_bootstrap95_pp": [
+          22.5,
+          39.5
+        ],
+        "sources": [
+          {
+            "path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_005/final_test.json",
+            "result_sha256": "46e7f01108841a6dd745529bac9101643edbf96c2c59dd8fa9fcf126e39554aa",
+            "recorded_checkpoint_sha256": "8a6568bd98fe3fc0c0acd63abdf101dc7d7cf9f23c43a74c9a66170d64525d93",
+            "cache_id": "3917c35e47f0615bb0f53e26e673668418fc7442f137a48157a75df1b4fb044c"
+          },
+          {
+            "path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_005/final_test.json",
+            "result_sha256": "0a7966c385be13b9f9d5f5e8c85724c8e81e9dcb6f95cd30939dc3e651e8c348",
+            "recorded_checkpoint_sha256": "bde787cc6ce3ec541b93e0e76c1a6f6b499be96afc271d65b2178d6612b7a063",
+            "cache_id": "74aae3e13f2dd0a88b95d018476f528a18b37e879a9d5d38347a80cc7dd2af73"
+          }
+        ]
+      }
+    ],
+    "libero": [
+      {
+        "dataset": "libero",
+        "training_seed": 3,
+        "n": 400,
+        "protocol_id": "4d1d6267e4270ac86caf491ea9b5fb630eb0e3a8a728822f96e94be9b3e3b0ad",
+        "both_succeed": 326,
+        "both_fail": 11,
+        "only_left": 30,
+        "only_right": 33,
+        "left_success_rate": 0.89,
+        "right_success_rate": 0.8975,
+        "difference_pp": -0.75,
+        "difference_bootstrap95_pp": [
+          -4.5,
+          2.9999999999999996
+        ],
+        "sources": [
+          {
+            "path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_003/final_test.json",
+            "result_sha256": "050ef30bfb20a5470c1e8bd0219f3523c184f93e411e425b1345b3e229284364",
+            "recorded_checkpoint_sha256": "68c86d4f16270bd3e891c9d0d7a1c37dc8c14d8e7842932f957f77607c8294fc",
+            "cache_id": "367e02a7c48cdb9cb50237b798939b49d0ff1a0bfb7477b0450898c2da333841"
+          },
+          {
+            "path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_003/final_test.json",
+            "result_sha256": "3dabca241cc8da5198de57122fb528abc30f513460eb75af89f4082bc71977f2",
+            "recorded_checkpoint_sha256": "963619d9cef4c9bd3913cb1bddab080a8b0f5c9a6e102a75463cff4c663506d2",
+            "cache_id": "718f44945973c67d6f299685b67dd470f2bcdedd2e81278b4a926b928b73bf9d"
+          }
+        ]
+      },
+      {
+        "dataset": "libero",
+        "training_seed": 4,
+        "n": 400,
+        "protocol_id": "4d1d6267e4270ac86caf491ea9b5fb630eb0e3a8a728822f96e94be9b3e3b0ad",
+        "both_succeed": 333,
+        "both_fail": 11,
+        "only_left": 22,
+        "only_right": 34,
+        "left_success_rate": 0.8875,
+        "right_success_rate": 0.9175,
+        "difference_pp": -3.0,
+        "difference_bootstrap95_pp": [
+          -6.5,
+          0.49999999999999994
+        ],
+        "sources": [
+          {
+            "path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_004/final_test.json",
+            "result_sha256": "da3563bea122a5f98ba9ed0b86ced481c4bd254ed4d0d737cfb072d08ab4fa28",
+            "recorded_checkpoint_sha256": "f522ba59ea1446397808c9f0f820362526373278c494afb1d165dc6123d4f5fb",
+            "cache_id": "367e02a7c48cdb9cb50237b798939b49d0ff1a0bfb7477b0450898c2da333841"
+          },
+          {
+            "path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_004/final_test.json",
+            "result_sha256": "ab8a64a24b9a6c89ce133f113d30834edb39e3f399dc0f17bd051a9fb92a3381",
+            "recorded_checkpoint_sha256": "be26215d355ada14b6db35e4fd3cc63981bf783c7d35f509aae35b82fbe5a6db",
+            "cache_id": "718f44945973c67d6f299685b67dd470f2bcdedd2e81278b4a926b928b73bf9d"
+          }
+        ]
+      },
+      {
+        "dataset": "libero",
+        "training_seed": 5,
+        "n": 400,
+        "protocol_id": "4d1d6267e4270ac86caf491ea9b5fb630eb0e3a8a728822f96e94be9b3e3b0ad",
+        "both_succeed": 327,
+        "both_fail": 8,
+        "only_left": 40,
+        "only_right": 25,
+        "left_success_rate": 0.9175,
+        "right_success_rate": 0.88,
+        "difference_pp": 3.75,
+        "difference_bootstrap95_pp": [
+          -2.6020852139652106e-16,
+          7.500000000000001
+        ],
+        "sources": [
+          {
+            "path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_005/final_test.json",
+            "result_sha256": "47d504053102de8fbaf847021e7d64728082b5275b5910c84cb216baed84ced4",
+            "recorded_checkpoint_sha256": "3eeb7febdc9a428147d00fde86c6bdecf2b876b88af7d80c195c171a34b8d62e",
+            "cache_id": "367e02a7c48cdb9cb50237b798939b49d0ff1a0bfb7477b0450898c2da333841"
+          },
+          {
+            "path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_005/final_test.json",
+            "result_sha256": "97d86f8c043c8e63147068f0b222c9897b57b7b5991825566102de5a36ba3f53",
+            "recorded_checkpoint_sha256": "f1a0d6a39b865084b4d1da9e6f161ec6f2dfdabd8561d2d8a4728a0a60fd9568",
+            "cache_id": "718f44945973c67d6f299685b67dd470f2bcdedd2e81278b4a926b928b73bf9d"
+          }
+        ]
+      }
+    ]
+  }
+}

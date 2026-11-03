@@ -1,0 +1,672 @@
+{
+  "scope": "Progression held-out tests: ALOHA epoch 250; LIBERO epoch 120",
+  "aloha": [
+    {
+      "seed": 3,
+      "both_succeed": 52,
+      "both_fail": 84,
+      "groot_only": 47,
+      "qwen_only": 17,
+      "qwen_failure_max_reward_when_groot_only": [
+        9,
+        3,
+        35,
+        0
+      ],
+      "groot_failure_max_reward_when_qwen_only": [
+        4,
+        1,
+        12,
+        0
+      ],
+      "net_advantage_by_failed_policy_max_reward": [
+        5,
+        2,
+        23,
+        0
+      ]
+    },
+    {
+      "seed": 4,
+      "both_succeed": 25,
+      "both_fail": 104,
+      "groot_only": 60,
+      "qwen_only": 11,
+      "qwen_failure_max_reward_when_groot_only": [
+        19,
+        2,
+        39,
+        0
+      ],
+      "groot_failure_max_reward_when_qwen_only": [
+        4,
+        2,
+        5,
+        0
+      ],
+      "net_advantage_by_failed_policy_max_reward": [
+        15,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "seed": 5,
+      "both_succeed": 51,
+      "both_fail": 55,
+      "groot_only": 78,
+      "qwen_only": 16,
+      "qwen_failure_max_reward_when_groot_only": [
+        39,
+        0,
+        39,
+        0
+      ],
+      "groot_failure_max_reward_when_qwen_only": [
+        0,
+        3,
+        13,
+        0
+      ],
+      "net_advantage_by_failed_policy_max_reward": [
+        39,
+        -3,
+        26,
+        0
+      ]
+    }
+  ],
+  "aloha_trajectory_audit": [
+    {
+      "seed": 3,
+      "experiment": "exp05",
+      "path": "F:\\work\\capstone\\action-omni\\asset\\durable\\aloha\\evaluation_trajectories\\aloha_progression_250_v1\\415a08a2c6f2\\aloha\\exp05\\seed_003\\final_test.npz",
+      "sha256": "4120c04dd92b6c82434f56492730623c5d1fae11ffbd24e311c309e6bd279287",
+      "reward_checks": {
+        "episodes": 200,
+        "success_without_observed_score2": 0,
+        "score2_observed": 163,
+        "score2_without_observed_score1": 68,
+        "score3_observed": 0
+      }
+    },
+    {
+      "seed": 3,
+      "experiment": "exp06",
+      "path": "F:\\work\\capstone\\action-omni\\asset\\durable\\aloha\\evaluation_trajectories\\aloha_progression_250_v1\\415a08a2c6f2\\aloha\\exp06\\seed_003\\final_test.npz",
+      "sha256": "073cf49ec314153399ba0d84cc9eea2f82f5c96571ad9da7acd69943678ff447",
+      "reward_checks": {
+        "episodes": 200,
+        "success_without_observed_score2": 0,
+        "score2_observed": 163,
+        "score2_without_observed_score1": 40,
+        "score3_observed": 0
+      }
+    },
+    {
+      "seed": 4,
+      "experiment": "exp05",
+      "path": "F:\\work\\capstone\\action-omni\\asset\\durable\\aloha\\evaluation_trajectories\\aloha_progression_250_v1\\415a08a2c6f2\\aloha\\exp05\\seed_004\\final_test.npz",
+      "sha256": "40288f078376daa824750e7da42141568e85893647483e60827a94a9e8af301c",
+      "reward_checks": {
+        "episodes": 200,
+        "success_without_observed_score2": 0,
+        "score2_observed": 153,
+        "score2_without_observed_score1": 56,
+        "score3_observed": 0
+      }
+    },
+    {
+      "seed": 4,
+      "experiment": "exp06",
+      "path": "F:\\work\\capstone\\action-omni\\asset\\durable\\aloha\\evaluation_trajectories\\aloha_progression_250_v1\\415a08a2c6f2\\aloha\\exp06\\seed_004\\final_test.npz",
+      "sha256": "c853c08f3782008188d20d0f38d812a382c8c032bfc64aaacbeb3fd03404a8c5",
+      "reward_checks": {
+        "episodes": 200,
+        "success_without_observed_score2": 0,
+        "score2_observed": 142,
+        "score2_without_observed_score1": 37,
+        "score3_observed": 0
+      }
+    },
+    {
+      "seed": 5,
+      "experiment": "exp05",
+      "path": "F:\\work\\capstone\\action-omni\\asset\\durable\\aloha\\evaluation_trajectories\\aloha_progression_250_v1\\415a08a2c6f2\\aloha\\exp05\\seed_005\\final_test.npz",
+      "sha256": "ba5264195993f53489e8ef307a30e7d389ae1cfeda1814a4599914eecc03eb74",
+      "reward_checks": {
+        "episodes": 200,
+        "success_without_observed_score2": 0,
+        "score2_observed": 187,
+        "score2_without_observed_score1": 70,
+        "score3_observed": 0
+      }
+    },
+    {
+      "seed": 5,
+      "experiment": "exp06",
+      "path": "F:\\work\\capstone\\action-omni\\asset\\durable\\aloha\\evaluation_trajectories\\aloha_progression_250_v1\\415a08a2c6f2\\aloha\\exp06\\seed_005\\final_test.npz",
+      "sha256": "025ecb3071c6dc670580f45f8db740a1dbffdafe9653809fa9d9d1d594504f0e",
+      "reward_checks": {
+        "episodes": 200,
+        "success_without_observed_score2": 0,
+        "score2_observed": 141,
+        "score2_without_observed_score1": 66,
+        "score3_observed": 0
+      }
+    }
+  ],
+  "aloha_reward_maximum_by_seed": {
+    "3": {
+      "GR00T": [
+        18,
+        19,
+        64,
+        0,
+        99
+      ],
+      "Qwen": [
+        20,
+        17,
+        94,
+        0,
+        69
+      ]
+    },
+    "4": {
+      "GR00T": [
+        34,
+        13,
+        68,
+        0,
+        85
+      ],
+      "Qwen": [
+        51,
+        7,
+        106,
+        0,
+        36
+      ]
+    },
+    "5": {
+      "GR00T": [
+        8,
+        5,
+        58,
+        0,
+        129
+      ],
+      "Qwen": [
+        59,
+        0,
+        74,
+        0,
+        67
+      ]
+    }
+  },
+  "aloha_reward_event_rates": [
+    {
+      "training_seed": 3,
+      "backbone": "GR00T",
+      "episodes": 200,
+      "right_finger_contact": 182,
+      "right_finger_cube_off_table": 163,
+      "successful_handoff": 99,
+      "score2_episodes": 163,
+      "score2_then_score4": 99,
+      "share_score2_episodes_later_reaching_score4": 0.6073619631901841,
+      "success_without_prior_score2": 0,
+      "median_steps_from_first_score2_to_first_score4": 139.0,
+      "median_first_right_contact_step": 152.0
+    },
+    {
+      "training_seed": 3,
+      "backbone": "Qwen",
+      "episodes": 200,
+      "right_finger_contact": 180,
+      "right_finger_cube_off_table": 163,
+      "successful_handoff": 69,
+      "score2_episodes": 163,
+      "score2_then_score4": 69,
+      "share_score2_episodes_later_reaching_score4": 0.4233128834355828,
+      "success_without_prior_score2": 0,
+      "median_steps_from_first_score2_to_first_score4": 132.0,
+      "median_first_right_contact_step": 151.0
+    },
+    {
+      "training_seed": 4,
+      "backbone": "GR00T",
+      "episodes": 200,
+      "right_finger_contact": 166,
+      "right_finger_cube_off_table": 153,
+      "successful_handoff": 85,
+      "score2_episodes": 153,
+      "score2_then_score4": 85,
+      "share_score2_episodes_later_reaching_score4": 0.5555555555555556,
+      "success_without_prior_score2": 0,
+      "median_steps_from_first_score2_to_first_score4": 146.0,
+      "median_first_right_contact_step": 145.0
+    },
+    {
+      "training_seed": 4,
+      "backbone": "Qwen",
+      "episodes": 200,
+      "right_finger_contact": 149,
+      "right_finger_cube_off_table": 142,
+      "successful_handoff": 36,
+      "score2_episodes": 142,
+      "score2_then_score4": 36,
+      "share_score2_episodes_later_reaching_score4": 0.2535211267605634,
+      "success_without_prior_score2": 0,
+      "median_steps_from_first_score2_to_first_score4": 145.5,
+      "median_first_right_contact_step": 146.0
+    },
+    {
+      "training_seed": 5,
+      "backbone": "GR00T",
+      "episodes": 200,
+      "right_finger_contact": 192,
+      "right_finger_cube_off_table": 187,
+      "successful_handoff": 129,
+      "score2_episodes": 187,
+      "score2_then_score4": 129,
+      "share_score2_episodes_later_reaching_score4": 0.6898395721925134,
+      "success_without_prior_score2": 0,
+      "median_steps_from_first_score2_to_first_score4": 145.0,
+      "median_first_right_contact_step": 147.5
+    },
+    {
+      "training_seed": 5,
+      "backbone": "Qwen",
+      "episodes": 200,
+      "right_finger_contact": 141,
+      "right_finger_cube_off_table": 141,
+      "successful_handoff": 67,
+      "score2_episodes": 141,
+      "score2_then_score4": 67,
+      "share_score2_episodes_later_reaching_score4": 0.475177304964539,
+      "success_without_prior_score2": 0,
+      "median_steps_from_first_score2_to_first_score4": 142.0,
+      "median_first_right_contact_step": 181.0
+    }
+  ],
+  "aloha_conditional_handoff_plot": "aloha_handoff_conditional_by_seed.png",
+  "aloha_discordant_reward_table": "aloha_discordant_reward_counts.csv",
+  "aloha_discordant_start_records": "aloha_discordant_start_rewards.csv",
+  "libero_tasks": [
+    {
+      "task": 0,
+      "instruction": "open the middle drawer of the cabinet",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 36,
+          "qwen_success": 40,
+          "difference_pp": -10.0,
+          "groot_only": 0,
+          "qwen_only": 4
+        },
+        {
+          "seed": 4,
+          "groot_success": 35,
+          "qwen_success": 38,
+          "difference_pp": -7.5,
+          "groot_only": 2,
+          "qwen_only": 5
+        },
+        {
+          "seed": 5,
+          "groot_success": 40,
+          "qwen_success": 40,
+          "difference_pp": 0.0,
+          "groot_only": 0,
+          "qwen_only": 0
+        }
+      ],
+      "mean_difference_pp": -5.833333333333333
+    },
+    {
+      "task": 1,
+      "instruction": "put the bowl on the stove",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 39,
+          "qwen_success": 40,
+          "difference_pp": -2.5,
+          "groot_only": 0,
+          "qwen_only": 1
+        },
+        {
+          "seed": 4,
+          "groot_success": 40,
+          "qwen_success": 39,
+          "difference_pp": 2.5,
+          "groot_only": 1,
+          "qwen_only": 0
+        },
+        {
+          "seed": 5,
+          "groot_success": 39,
+          "qwen_success": 39,
+          "difference_pp": 0.0,
+          "groot_only": 1,
+          "qwen_only": 1
+        }
+      ],
+      "mean_difference_pp": 0.0
+    },
+    {
+      "task": 2,
+      "instruction": "put the wine bottle on top of the cabinet",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 39,
+          "qwen_success": 40,
+          "difference_pp": -2.5,
+          "groot_only": 0,
+          "qwen_only": 1
+        },
+        {
+          "seed": 4,
+          "groot_success": 39,
+          "qwen_success": 40,
+          "difference_pp": -2.5,
+          "groot_only": 0,
+          "qwen_only": 1
+        },
+        {
+          "seed": 5,
+          "groot_success": 40,
+          "qwen_success": 38,
+          "difference_pp": 5.0,
+          "groot_only": 2,
+          "qwen_only": 0
+        }
+      ],
+      "mean_difference_pp": 0.0
+    },
+    {
+      "task": 3,
+      "instruction": "open the top drawer and put the bowl inside",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 25,
+          "qwen_success": 30,
+          "difference_pp": -12.5,
+          "groot_only": 3,
+          "qwen_only": 8
+        },
+        {
+          "seed": 4,
+          "groot_success": 28,
+          "qwen_success": 28,
+          "difference_pp": 0.0,
+          "groot_only": 6,
+          "qwen_only": 6
+        },
+        {
+          "seed": 5,
+          "groot_success": 35,
+          "qwen_success": 37,
+          "difference_pp": -5.0,
+          "groot_only": 3,
+          "qwen_only": 5
+        }
+      ],
+      "mean_difference_pp": -5.833333333333333
+    },
+    {
+      "task": 4,
+      "instruction": "put the bowl on top of the cabinet",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 40,
+          "qwen_success": 40,
+          "difference_pp": 0.0,
+          "groot_only": 0,
+          "qwen_only": 0
+        },
+        {
+          "seed": 4,
+          "groot_success": 40,
+          "qwen_success": 39,
+          "difference_pp": 2.5,
+          "groot_only": 1,
+          "qwen_only": 0
+        },
+        {
+          "seed": 5,
+          "groot_success": 40,
+          "qwen_success": 38,
+          "difference_pp": 5.0,
+          "groot_only": 2,
+          "qwen_only": 0
+        }
+      ],
+      "mean_difference_pp": 2.5
+    },
+    {
+      "task": 5,
+      "instruction": "push the plate to the front of the stove",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 39,
+          "qwen_success": 36,
+          "difference_pp": 7.5,
+          "groot_only": 4,
+          "qwen_only": 1
+        },
+        {
+          "seed": 4,
+          "groot_success": 27,
+          "qwen_success": 38,
+          "difference_pp": -27.5,
+          "groot_only": 0,
+          "qwen_only": 11
+        },
+        {
+          "seed": 5,
+          "groot_success": 36,
+          "qwen_success": 26,
+          "difference_pp": 25.0,
+          "groot_only": 12,
+          "qwen_only": 2
+        }
+      ],
+      "mean_difference_pp": 1.6666666666666667
+    },
+    {
+      "task": 6,
+      "instruction": "put the cream cheese in the bowl",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 32,
+          "qwen_success": 24,
+          "difference_pp": 20.0,
+          "groot_only": 13,
+          "qwen_only": 5
+        },
+        {
+          "seed": 4,
+          "groot_success": 36,
+          "qwen_success": 31,
+          "difference_pp": 12.5,
+          "groot_only": 7,
+          "qwen_only": 2
+        },
+        {
+          "seed": 5,
+          "groot_success": 33,
+          "qwen_success": 25,
+          "difference_pp": 20.0,
+          "groot_only": 12,
+          "qwen_only": 4
+        }
+      ],
+      "mean_difference_pp": 17.5
+    },
+    {
+      "task": 7,
+      "instruction": "turn on the stove",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 39,
+          "qwen_success": 40,
+          "difference_pp": -2.5,
+          "groot_only": 0,
+          "qwen_only": 1
+        },
+        {
+          "seed": 4,
+          "groot_success": 40,
+          "qwen_success": 39,
+          "difference_pp": 2.5,
+          "groot_only": 1,
+          "qwen_only": 0
+        },
+        {
+          "seed": 5,
+          "groot_success": 38,
+          "qwen_success": 38,
+          "difference_pp": 0.0,
+          "groot_only": 2,
+          "qwen_only": 2
+        }
+      ],
+      "mean_difference_pp": 0.0
+    },
+    {
+      "task": 8,
+      "instruction": "put the bowl on the plate",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 36,
+          "qwen_success": 31,
+          "difference_pp": 12.5,
+          "groot_only": 9,
+          "qwen_only": 4
+        },
+        {
+          "seed": 4,
+          "groot_success": 35,
+          "qwen_success": 35,
+          "difference_pp": 0.0,
+          "groot_only": 4,
+          "qwen_only": 4
+        },
+        {
+          "seed": 5,
+          "groot_success": 31,
+          "qwen_success": 33,
+          "difference_pp": -5.0,
+          "groot_only": 5,
+          "qwen_only": 7
+        }
+      ],
+      "mean_difference_pp": 2.5
+    },
+    {
+      "task": 9,
+      "instruction": "put the wine bottle on the rack",
+      "by_seed": [
+        {
+          "seed": 3,
+          "groot_success": 31,
+          "qwen_success": 38,
+          "difference_pp": -17.5,
+          "groot_only": 1,
+          "qwen_only": 8
+        },
+        {
+          "seed": 4,
+          "groot_success": 35,
+          "qwen_success": 40,
+          "difference_pp": -12.5,
+          "groot_only": 0,
+          "qwen_only": 5
+        },
+        {
+          "seed": 5,
+          "groot_success": 35,
+          "qwen_success": 38,
+          "difference_pp": -7.5,
+          "groot_only": 1,
+          "qwen_only": 4
+        }
+      ],
+      "mean_difference_pp": -12.5
+    }
+  ],
+  "libero_failure_record_diagnostics": [
+    {
+      "seed": 3,
+      "experiment": "exp05",
+      "failed_episodes": 44,
+      "failure_termination_reasons": {
+        "horizon": 44
+      },
+      "failed_with_zero_gripper_command_sign_changes": 7
+    },
+    {
+      "seed": 3,
+      "experiment": "exp06",
+      "failed_episodes": 41,
+      "failure_termination_reasons": {
+        "horizon": 41
+      },
+      "failed_with_zero_gripper_command_sign_changes": 9
+    },
+    {
+      "seed": 4,
+      "experiment": "exp05",
+      "failed_episodes": 45,
+      "failure_termination_reasons": {
+        "horizon": 45
+      },
+      "failed_with_zero_gripper_command_sign_changes": 27
+    },
+    {
+      "seed": 4,
+      "experiment": "exp06",
+      "failed_episodes": 33,
+      "failure_termination_reasons": {
+        "horizon": 33
+      },
+      "failed_with_zero_gripper_command_sign_changes": 8
+    },
+    {
+      "seed": 5,
+      "experiment": "exp05",
+      "failed_episodes": 33,
+      "failure_termination_reasons": {
+        "horizon": 33
+      },
+      "failed_with_zero_gripper_command_sign_changes": 6
+    },
+    {
+      "seed": 5,
+      "experiment": "exp06",
+      "failed_episodes": 48,
+      "failure_termination_reasons": {
+        "horizon": 48
+      },
+      "failed_with_zero_gripper_command_sign_changes": 17
+    }
+  ],
+  "limitations": [
+    "Three independent training-seed pairs; LIBERO has 40 starts per task and pair",
+    "Task comparisons are exploratory and not adjusted for multiple comparisons",
+    "Reward categories and selected videos do not establish failure causes or their prevalence"
+  ]
+}

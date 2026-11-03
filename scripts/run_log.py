@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import tempfile
+import time
 
 
 def log_event(event: str, *, level: str = "INFO", **fields) -> dict:
@@ -19,11 +21,30 @@ def log_event(event: str, *, level: str = "INFO", **fields) -> dict:
     return record
 
 
+def replace_with_retry(source: str | Path, destination: str | Path, *, attempts: int = 7) -> None:
+    """Retry transient Windows sharing/permission denials during atomic publish."""
+    source, destination = Path(source), Path(destination)
+    for attempt in range(attempts):
+        try:
+            os.replace(source, destination)
+            return
+        except PermissionError:
+            if attempt + 1 == attempts:
+                raise
+            time.sleep(min(0.05 * (2 ** attempt), 0.5))
+
+
 def write_json_atomic(path: str | Path, payload: dict) -> None:
     """Publish a complete JSON status file so readers never see a partial write."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
-    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str) + "\n",
-                   encoding="utf-8")
-    os.replace(tmp, path)
+    fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp",
+                                          dir=path.parent)
+    tmp = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(payload, indent=2, sort_keys=True, default=str) + "\n")
+            stream.flush()
+        replace_with_retry(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)

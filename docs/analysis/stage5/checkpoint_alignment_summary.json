@@ -1,0 +1,476 @@
+{
+  "scope": "Development checkpoint probes only; no held-out final-test data used.",
+  "rho_note": "Spearman correlation between validation loss and rollout success within each trained head; anchors are not independent replicates.",
+  "heads": [
+    {
+      "dataset": "aloha",
+      "experiment": "exp05",
+      "backbone": "GR00T",
+      "training_seed": 3,
+      "n_anchors": 11,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        200,
+        225,
+        250
+      ],
+      "development_episodes_per_anchor": [
+        50
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.22426157747586814,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.3,
+      "best_development_epoch_earliest_tie": 175,
+      "best_development_success": 0.58,
+      "success_regret_of_minimum_loss_checkpoint_pp": 27.999999999999996,
+      "training_loss_first_last": [
+        1.9915292050157274,
+        0.022244160030303255
+      ],
+      "validation_loss_first_last": [
+        2.2888933992385865,
+        0.38338213980197905
+      ]
+    },
+    {
+      "dataset": "aloha",
+      "experiment": "exp05",
+      "backbone": "GR00T",
+      "training_seed": 4,
+      "n_anchors": 11,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        200,
+        225,
+        250
+      ],
+      "development_episodes_per_anchor": [
+        50
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.5159871144242621,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.0,
+      "best_development_epoch_earliest_tie": 225,
+      "best_development_success": 0.58,
+      "success_regret_of_minimum_loss_checkpoint_pp": 57.99999999999999,
+      "training_loss_first_last": [
+        1.9921608805656432,
+        0.02376788246578404
+      ],
+      "validation_loss_first_last": [
+        2.2888933992385865,
+        0.39480523419380187
+      ]
+    },
+    {
+      "dataset": "aloha",
+      "experiment": "exp05",
+      "backbone": "GR00T",
+      "training_seed": 5,
+      "n_anchors": 11,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        200,
+        225,
+        250
+      ],
+      "development_episodes_per_anchor": [
+        50
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.5484395101983845,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.0,
+      "best_development_epoch_earliest_tie": 175,
+      "best_development_success": 0.62,
+      "success_regret_of_minimum_loss_checkpoint_pp": 62.0,
+      "training_loss_first_last": [
+        1.9934995915208544,
+        0.02417915175402803
+      ],
+      "validation_loss_first_last": [
+        2.2888933992385865,
+        0.38911181724071503
+      ]
+    },
+    {
+      "dataset": "aloha",
+      "experiment": "exp06",
+      "backbone": "Qwen",
+      "training_seed": 3,
+      "n_anchors": 11,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        200,
+        225,
+        250
+      ],
+      "development_episodes_per_anchor": [
+        50
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.28181818181818186,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.12,
+      "best_development_epoch_earliest_tie": 225,
+      "best_development_success": 0.6,
+      "success_regret_of_minimum_loss_checkpoint_pp": 48.0,
+      "training_loss_first_last": [
+        1.9915292050157274,
+        0.0222820277325809
+      ],
+      "validation_loss_first_last": [
+        2.2888933992385865,
+        0.3868375225067139
+      ]
+    },
+    {
+      "dataset": "aloha",
+      "experiment": "exp06",
+      "backbone": "Qwen",
+      "training_seed": 4,
+      "n_anchors": 11,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        200,
+        225,
+        250
+      ],
+      "development_episodes_per_anchor": [
+        50
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": -0.0956722299914231,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.0,
+      "best_development_epoch_earliest_tie": 100,
+      "best_development_success": 0.5,
+      "success_regret_of_minimum_loss_checkpoint_pp": 50.0,
+      "training_loss_first_last": [
+        1.9921608805656432,
+        0.023355333520365614
+      ],
+      "validation_loss_first_last": [
+        2.2888933992385865,
+        0.40670726585388184
+      ]
+    },
+    {
+      "dataset": "aloha",
+      "experiment": "exp06",
+      "backbone": "Qwen",
+      "training_seed": 5,
+      "n_anchors": 11,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        200,
+        225,
+        250
+      ],
+      "development_episodes_per_anchor": [
+        50
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.25968176711957697,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.08,
+      "best_development_epoch_earliest_tie": 125,
+      "best_development_success": 0.58,
+      "success_regret_of_minimum_loss_checkpoint_pp": 49.99999999999999,
+      "training_loss_first_last": [
+        1.9934995915208544,
+        0.024147267579766256
+      ],
+      "validation_loss_first_last": [
+        2.2888933992385865,
+        0.3915741012096405
+      ]
+    },
+    {
+      "dataset": "libero",
+      "experiment": "exp05",
+      "backbone": "GR00T",
+      "training_seed": 3,
+      "n_anchors": 6,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        120
+      ],
+      "development_episodes_per_anchor": [
+        100
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.11595420713048969,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.58,
+      "best_development_epoch_earliest_tie": 120,
+      "best_development_success": 0.95,
+      "success_regret_of_minimum_loss_checkpoint_pp": 37.0,
+      "training_loss_first_last": [
+        1.221644348065768,
+        0.029340145167744986
+      ],
+      "validation_loss_first_last": [
+        1.2220653248123727,
+        0.14819189430276872
+      ]
+    },
+    {
+      "dataset": "libero",
+      "experiment": "exp05",
+      "backbone": "GR00T",
+      "training_seed": 4,
+      "n_anchors": 6,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        120
+      ],
+      "development_episodes_per_anchor": [
+        100
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.028571428571428574,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.65,
+      "best_development_epoch_earliest_tie": 120,
+      "best_development_success": 0.9099999999999999,
+      "success_regret_of_minimum_loss_checkpoint_pp": 25.99999999999999,
+      "training_loss_first_last": [
+        1.2213747096913201,
+        0.029155001062982983
+      ],
+      "validation_loss_first_last": [
+        1.2220653248123727,
+        0.1480561510258739
+      ]
+    },
+    {
+      "dataset": "libero",
+      "experiment": "exp05",
+      "backbone": "GR00T",
+      "training_seed": 5,
+      "n_anchors": 6,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        120
+      ],
+      "development_episodes_per_anchor": [
+        100
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.14285714285714288,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.71,
+      "best_development_epoch_earliest_tie": 120,
+      "best_development_success": 0.9,
+      "success_regret_of_minimum_loss_checkpoint_pp": 19.000000000000007,
+      "training_loss_first_last": [
+        1.221297953011734,
+        0.029116668357996138
+      ],
+      "validation_loss_first_last": [
+        1.2220653248123727,
+        0.1525101493751441
+      ]
+    },
+    {
+      "dataset": "libero",
+      "experiment": "exp06",
+      "backbone": "Qwen",
+      "training_seed": 3,
+      "n_anchors": 6,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        120
+      ],
+      "development_episodes_per_anchor": [
+        100
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.14285714285714288,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.54,
+      "best_development_epoch_earliest_tie": 120,
+      "best_development_success": 0.96,
+      "success_regret_of_minimum_loss_checkpoint_pp": 41.99999999999999,
+      "training_loss_first_last": [
+        1.221644348065768,
+        0.029300060274960873
+      ],
+      "validation_loss_first_last": [
+        1.2220653248123727,
+        0.15175555101301702
+      ]
+    },
+    {
+      "dataset": "libero",
+      "experiment": "exp06",
+      "backbone": "Qwen",
+      "training_seed": 4,
+      "n_anchors": 6,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        120
+      ],
+      "development_episodes_per_anchor": [
+        100
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.11595420713048969,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.64,
+      "best_development_epoch_earliest_tie": 120,
+      "best_development_success": 0.89,
+      "success_regret_of_minimum_loss_checkpoint_pp": 25.0,
+      "training_loss_first_last": [
+        1.2213747096913201,
+        0.0289968067351895
+      ],
+      "validation_loss_first_last": [
+        1.2220653248123727,
+        0.15294045924605296
+      ]
+    },
+    {
+      "dataset": "libero",
+      "experiment": "exp06",
+      "backbone": "Qwen",
+      "training_seed": 5,
+      "n_anchors": 6,
+      "epochs": [
+        0,
+        25,
+        50,
+        75,
+        100,
+        120
+      ],
+      "development_episodes_per_anchor": [
+        100
+      ],
+      "probe_purposes": [
+        "development_selection",
+        "progress_probe"
+      ],
+      "spearman_validation_loss_vs_development_success": 0.11595420713048969,
+      "minimum_validation_loss_epoch": 25,
+      "development_success_at_minimum_loss": 0.6799999999999999,
+      "best_development_epoch_earliest_tie": 100,
+      "best_development_success": 0.9,
+      "success_regret_of_minimum_loss_checkpoint_pp": 22.000000000000007,
+      "training_loss_first_last": [
+        1.221297953011734,
+        0.02890972781044963
+      ],
+      "validation_loss_first_last": [
+        1.2220653248123727,
+        0.15330628722514353
+      ]
+    }
+  ],
+  "median_spearman_by_dataset": {
+    "aloha": 0.2707499744688794,
+    "libero": 0.11595420713048969
+  },
+  "median_loss_checkpoint_regret_pp_by_dataset": {
+    "aloha": 50.0,
+    "libero": 25.499999999999993
+  }
+}

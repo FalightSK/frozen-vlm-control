@@ -482,7 +482,7 @@ if pgrep -af '[s]cripts/runpod_eval_worker.py' >/dev/null; then
   echo '{{"worker":"already_running"}}'; exit 0
 fi
 nohup flock -n "$ROOT/.eval_worker.lock" env MUJOCO_GL=egl PYTHONUNBUFFERED=1 python3 "$ROOT/scripts/runpod_eval_worker.py" \\
-  --durable-root "$DURABLE" --work-root "$ROOT/asset/eval_worker" \\
+  --durable-root "$DURABLE" --work-root "$ROOT/asset/evaluation_scratch" \\
   --aloha-python "$ROOT/.venv-eval-aloha/bin/python" \\
   --libero-python "$ROOT/.venv-eval-libero/bin/python" \\
   --poll-seconds {int(poll_seconds)} >>"$LOG" 2>&1 </dev/null &

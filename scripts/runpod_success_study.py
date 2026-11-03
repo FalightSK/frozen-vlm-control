@@ -1,4 +1,4 @@
-"""Run one dataset-role of the unbounded, development-success-stopped study."""
+"""Run one dataset-role of the development-success study."""
 from __future__ import annotations
 
 import argparse
@@ -25,7 +25,7 @@ from configs.registry import get_config
 from experiment_protocol import (apply_normalization, cache_config, digest, encoder_code_id,
                                  file_digest, load_protocol, protocol_arrays, run_signature,
                                  source_assets, write_json)
-from scripts.run_log import log_event, write_json_atomic
+from scripts.run_log import log_event, replace_with_retry, write_json_atomic
 from scripts.runpod_bootstrap import cache_source_for_plan
 from scripts.success_queue import publish_rollout_task
 
@@ -72,9 +72,11 @@ def build_jobs(plan: dict, dataset: str, run_root: Path, workers: int,
         raise ValueError("Success-stopped plan must use online/cached encoding and independent seeds [3,4,5]")
     if dataset not in plan.get("datasets", {}):
         raise ValueError(f"Dataset is absent from the locked success study: {dataset}")
-    stopping = plan["stopping"]
-    if stopping.get("maximum_epochs") is not None:
-        raise ValueError("The success-stopped study must have no maximum epoch limit")
+    stopping = {**plan["stopping"], **plan["datasets"][dataset].get("stopping", {})}
+    maximum_epochs = stopping.get("maximum_epochs")
+    if maximum_epochs is not None and (type(maximum_epochs) is not int
+                                      or maximum_epochs < int(stopping["minimum_epochs"])):
+        raise ValueError("maximum_epochs must be an integer at least minimum_epochs")
     jobs = []
     setting = plan["datasets"][dataset]
     protocol_path = ROOT / setting["split_manifest"]
@@ -99,12 +101,16 @@ def build_jobs(plan: dict, dataset: str, run_root: Path, workers: int,
             if cfg.batch_size != int(plan["effective_batch_size"]):
                 raise ValueError("Resolved effective batch size differs from the locked plan")
             assets = source_assets(cfg)
-            run = run_root / dataset / Path(cfg.output_dir).name / f"seed_{seed:03d}"
+            # The dataset is already explicit in the study-root name. Strip the
+            # historical exp05/exp06 prefix from the directory label; keep the
+            # original experiment ID in the manifest and config.
+            backbone_dir = Path(cfg.output_dir).name.split("_", 1)[-1]
+            run = run_root / backbone_dir / f"seed_{seed:03d}"
             durable_run = (durable_root / "success_studies" / run_root.name / dataset
                            / run.relative_to(run_root))
             cache_path = None
             if feature_mode == "cached":
-                cache_path = (ROOT / "asset/cache/cached_success_study" / cache_study_id / dataset
+                cache_path = (ROOT / "asset/cache/precomputed" / dataset
                               / experiment / "vlm_embeddings.h5").resolve()
                 cfg.embeddings_cache = str(cache_path)
                 durable_cache = (durable_root / "success_studies" / cache_study_id / "feature_caches"
@@ -134,6 +140,17 @@ def build_jobs(plan: dict, dataset: str, run_root: Path, workers: int,
                        "--rollout-durable-run-dir", str(durable_run),
                        "--rollout-study-id", run_root.name,
                        "--rollout-plan-id", digest(plan)])
+            checkpoint_epochs = setting.get("checkpoint_epochs", [])
+            if checkpoint_epochs:
+                if (checkpoint_epochs != sorted(set(checkpoint_epochs))
+                        or checkpoint_epochs[0] != 0
+                        or checkpoint_epochs[-1] != maximum_epochs
+                        or any(type(epoch) is not int or epoch < 0 or epoch > maximum_epochs
+                               for epoch in checkpoint_epochs)):
+                    raise ValueError("checkpoint_epochs must be unique, sorted, and span 0 to maximum_epochs")
+                positive_epochs = [epoch for epoch in checkpoint_epochs if epoch > 0]
+                command.extend(["--probe-epochs", *map(str, positive_epochs)])
+                command.append("--save-initial-checkpoint")
             jobs.append({"dataset": dataset, "experiment": experiment,
                          "backbone": cfg.vlm_backbone, "training_seed": seed,
                          "feature_mode": feature_mode,
@@ -255,7 +272,7 @@ def sync_file(source: Path, destination: Path) -> bool:
         if ((before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns)
                 or temporary.stat().st_size != after.st_size):
             return False
-        os.replace(temporary, destination)
+        replace_with_retry(temporary, destination)
         return True
     finally:
         if temporary.exists():
@@ -270,7 +287,14 @@ def sync_tree(source: Path, destination: Path) -> int:
         relative = path.relative_to(source)
         if (path.is_file() and not path.name.startswith("recovery_e")
                 and relative.as_posix() != "checkpoints/last.pt"):
-            copied += int(sync_file(path, destination / relative))
+            try:
+                copied += int(sync_file(path, destination / relative))
+            except PermissionError as exc:
+                if path.name not in {"progress.json", "progress_runner.json", "run_manifest.json"}:
+                    raise
+                log_event("success_study.status_sync_deferred", level="WARNING",
+                          path=str(path), durable_path=str(destination / relative),
+                          error=str(exc))
     return copied
 
 
@@ -288,7 +312,7 @@ def publish_code_snapshot(code_paths: list[str], hashes: dict[str, str], destina
             shutil.copyfile(source, temporary)
             if file_digest(temporary) != expected_sha:
                 raise IOError(f"Durable workflow code copy failed verification: {relative}")
-            os.replace(temporary, target)
+            replace_with_retry(temporary, target)
         finally:
             if temporary.exists():
                 temporary.unlink()
@@ -371,8 +395,17 @@ def policy_key(job: dict) -> str:
 
 def update_job_status(status_path: Path, durable_status_path: Path, status: dict) -> None:
     status["updated_utc"] = stamp()
-    write_json_atomic(status_path, status)
-    sync_file(status_path, durable_status_path)
+    try:
+        write_json_atomic(status_path, status)
+    except PermissionError as exc:
+        log_event("success_study.status_write_deferred", level="WARNING",
+                  path=str(status_path), error=str(exc))
+    try:
+        if status_path.is_file():
+            sync_file(status_path, durable_status_path)
+    except PermissionError as exc:
+        log_event("success_study.status_sync_deferred", level="WARNING",
+                  path=str(status_path), durable_path=str(durable_status_path), error=str(exc))
 
 
 def run_training_job(job: dict, *, durable_root: Path, poll_seconds: float,
@@ -466,8 +499,12 @@ def aggregate_active(active: dict[Future, dict]) -> list[dict]:
 
 def write_study_status(status: dict, local_path: Path, durable_path: Path) -> None:
     status["updated_utc"] = stamp()
-    write_json_atomic(local_path, status)
-    write_json_atomic(durable_path, status)
+    for path in (local_path, durable_path):
+        try:
+            write_json_atomic(path, status)
+        except PermissionError as exc:
+            log_event("success_study.status_write_deferred", level="WARNING",
+                      path=str(path), stage=status.get("stage"), error=str(exc))
 
 
 def add_completed_policy(status: dict, job: dict, task: dict) -> None:
@@ -520,7 +557,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-root", type=Path,
                         help="Role-specific run root; never reuse the fixed-update study root")
     parser.add_argument("--durable-root", type=Path,
-                        default=Path(os.environ.get("ACTIONOMNI_DURABLE_ROOT", "/workspace-global/action-omni")))
+                        help="Durable output root; required with --local, otherwise defaults to ACTIONOMNI_DURABLE_ROOT or /workspace-global/action-omni")
+    parser.add_argument("--local", action="store_true",
+                        help="Run on a local machine with an explicit --durable-root instead of requiring RunPod Global Volume")
     parser.add_argument("--workers", type=int, default=1,
                         help="DataLoader workers per training process")
     parser.add_argument("--parallel-policies", type=int, default=2,
@@ -533,13 +572,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.workers < 0 or not 1 <= args.parallel_policies <= 2 \
             or args.poll_seconds <= 0 or args.status_seconds <= 0:
         parser.error("--workers must be nonnegative; --parallel-policies must be 1 or 2; poll/status intervals must be positive")
+    if args.local and args.durable_root is None:
+        parser.error("--local requires an explicit --durable-root so outputs are not written to the RunPod default")
     plan = json.loads(args.plan.read_text(encoding="utf-8"))
     plan_id = digest(plan)
-    run_name = f"{plan.get('name', 'runpod_success_stopped_v1')}_{args.dataset}"
+    run_name = f"{args.dataset}_success_stopped_v1"
     run_root = (args.run_root or (ROOT / "asset/runs" / run_name)).resolve()
     if any("runpod_update_matched" in part for part in run_root.parts):
         parser.error("Success-stopped training must use a new role-specific run root, never the fixed-update root")
-    durable_root = args.durable_root.resolve()
+    durable_root = (args.durable_root or Path(os.environ.get(
+        "ACTIONOMNI_DURABLE_ROOT", "/workspace-global/action-omni"))).resolve()
     plan_path = args.plan.resolve()
     jobs = build_jobs(plan, args.dataset, run_root, args.workers, plan_path, durable_root)
     if args.dry_run:
@@ -555,12 +597,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; no success-stopped training was started")
-    if not Path("/workspace-global").is_dir():
+    if not args.local and not Path("/workspace-global").is_dir():
         raise RuntimeError("RunPod Global Volume is not mounted at /workspace-global")
     durable_root.mkdir(parents=True, exist_ok=True)
     run_root.mkdir(parents=True, exist_ok=True)
     study_id = run_root.name
-    code_paths = ["scripts/runpod_success_study.py", "scripts/success_queue.py",
+    code_paths = ["scripts/runpod_success_study.py", "scripts/run_log.py",
+                  "scripts/manage_checkpoint_retention.py",
+                  "scripts/success_queue.py",
                   "scripts/success_stopping.py", "scripts/train.py", "scripts/checkpoint_io.py",
                   "scripts/online_encoder.py", "scripts/plot_study_losses.py",
                   "scripts/runpod_bootstrap.py",
@@ -572,6 +616,7 @@ def main(argv: list[str] | None = None) -> int:
                   "data/libero/dataset.py", "data/libero/frames.py"]
     code_hashes = {path: file_digest(ROOT / path) for path in code_paths}
     contract = {"plan_id": plan_id, "plan": plan, "dataset_role": args.dataset,
+                "execution_mode": "local" if args.local else "runpod",
                 "jobs": [{key: job[key] for key in ("dataset", "experiment", "backbone",
                                                     "training_seed", "protocol_id", "run_signature",
                                                     "feature_mode", "cache_id", "cache_sha256")}

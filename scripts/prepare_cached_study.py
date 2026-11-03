@@ -38,7 +38,7 @@ def cache_paths(durable_root: Path, study_id: str, dataset: str,
         raise ValueError(f"Unsafe study ID: {study_id!r}")
     if dataset not in {"aloha", "libero"} or experiment not in {"exp05", "exp06"}:
         raise ValueError(f"Unsupported cached study arm: {dataset}/{experiment}")
-    local = ROOT / "asset/cache/cached_success_study" / study_id / dataset / experiment / "vlm_embeddings.h5"
+    local = ROOT / "asset/cache/precomputed" / dataset / experiment / "vlm_embeddings.h5"
     durable = (Path(durable_root) / "success_studies" / study_id / "feature_caches"
                / dataset / experiment / "vlm_embeddings.h5")
     return local.resolve(), durable.resolve()
@@ -377,7 +377,8 @@ def _prepare_one(args, plan: dict, plan_id: str, dataset: str,
     started = time.perf_counter()
     log_event("cache.precompute_started", role=role, output=str(partial), command=command)
     try:
-        result = subprocess.run(command, cwd=ROOT, check=False)
+        child_env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1")
+        result = subprocess.run(command, cwd=ROOT, env=child_env, check=False)
         if result.returncode != 0:
             raise subprocess.CalledProcessError(result.returncode, command)
         if not partial.is_file():

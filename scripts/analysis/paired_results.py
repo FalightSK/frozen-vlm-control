@@ -18,6 +18,8 @@ from scipy.stats import binomtest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from scripts.success_queue import LIBERO_STATE_KINDS
+
 
 def wilson(successes, n, z=1.959963984540054):
     if n < 1 or not 0 <= successes <= n:
@@ -83,9 +85,11 @@ def paired_statistics(left, right, strata=None, resamples=20000, seed=20261018):
 
 def outcome_map(result):
     dataset = result["dataset"]
-    expected_kind = {"aloha": "gym_aloha_mujoco_state_v1",
-                     "libero": "libero_mujoco_state_after_init_and_settle_v1"}.get(dataset)
-    if expected_kind is None:
+    if dataset == "aloha":
+        accepted_kinds = {"gym_aloha_mujoco_state_v1"}
+    elif dataset == "libero":
+        accepted_kinds = LIBERO_STATE_KINDS
+    else:
         raise ValueError(f"Unsupported paired-evaluation dataset: {dataset!r}")
     records = result["results"] if dataset == "libero" else result["episodes"]
     mapped = {}
@@ -104,9 +108,9 @@ def outcome_map(result):
                 char not in "0123456789abcdef" for char in state_sha.lower()):
             raise ValueError(f"Real simulator-state SHA-256 is missing/invalid for paired start {key}; "
                              "legacy records without state fingerprints are ineligible")
-        if state_kind != expected_kind:
+        if state_kind not in accepted_kinds:
             raise ValueError(f"Unexpected or missing real-state fingerprint kind for {key}: "
-                             f"{state_kind!r}; expected {expected_kind!r}")
+                             f"{state_kind!r}; expected one of {sorted(accepted_kinds)!r}")
         mapped[key] = (success, r["environment_seed"], r["policy_sampling_seed"],
                        state_sha.lower(), state_kind)
     if not mapped:

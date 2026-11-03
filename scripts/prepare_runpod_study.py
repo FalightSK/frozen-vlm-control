@@ -162,6 +162,60 @@ def asset_manifest(plan: dict, datasets: list[str], asset_root: Path) -> dict:
     return result
 
 
+def verify_local_asset_revisions(plan: dict, manifest: dict, asset_root: Path) -> None:
+    """Confirm local files match the revisions named by the plan."""
+    sources = plan["source_revisions"]
+    roots = {
+        "models/groot_n17_3b": sources["groot"]["revision"],
+        "models/qwen3_vl_2b": sources["qwen3vl"]["revision"],
+        "models/cosmos_reason2_2b": sources["groot_tokenizer"]["revision"],
+        "data/aloha_sim_transfer_cube_human": sources["aloha_dataset"]["revision"],
+        "data/libero": sources["libero_dataset"]["revision"],
+    }
+    verified_groups = set()
+    present_groups = set()
+    for relative in manifest["files"]:
+        group = next((name for name in roots if relative.startswith(name + "/")), None)
+        if group is None:
+            raise ValueError(f"Local asset is outside the pinned source groups: {relative}")
+        present_groups.add(group)
+        inner = relative[len(group) + 1:]
+        metadata = asset_root / group / ".cache/huggingface/download" / f"{inner}.metadata"
+        if not metadata.is_file():
+            # Large LFS shards may have been staged without per-file metadata;
+            # require a matching pinned marker elsewhere in the same snapshot.
+            continue
+        actual_revision = metadata.read_text(encoding="utf-8").splitlines()[0]
+        if actual_revision != roots[group]:
+            raise ValueError(f"Local asset revision mismatch for {relative}: "
+                             f"expected {roots[group]}, found {actual_revision}")
+        verified_groups.add(group)
+    if present_groups - verified_groups:
+        unmarked = present_groups - verified_groups
+        if unmarked != {"data/libero"}:
+            raise ValueError(f"No pinned Hugging Face revision marker for asset groups: "
+                             f"{sorted(unmarked)}")
+        # The checked-in LIBERO HDF5 files were copied out of the Hub cache,
+        # which drops its per-file metadata. Verify their content against the
+        # pinned Hub LFS hashes instead of trusting a filename or local ref.
+        source = sources["libero_dataset"]
+        from huggingface_hub import HfApi
+        info = HfApi().repo_info(source["repo_id"], repo_type="dataset",
+                                 revision=source["revision"], files_metadata=True)
+        if info.sha != source["revision"]:
+            raise ValueError(f"Hub resolved LIBERO revision {info.sha}, expected {source['revision']}")
+        remote = {item.rfilename: item for item in info.siblings}
+        for relative, actual in manifest["files"].items():
+            if not relative.startswith("data/libero/"):
+                continue
+            hub_path = relative[len("data/libero/"):]
+            item = remote.get(hub_path)
+            digest = getattr(getattr(item, "lfs", None), "sha256", None) if item else None
+            size = getattr(item, "size", None) if item else None
+            if not digest or size != actual["size"] or digest != actual["sha256"]:
+                raise ValueError(f"Local LIBERO file does not match pinned Hub content: {hub_path}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dataset", choices=("aloha", "libero"), required=True)
@@ -170,6 +224,8 @@ def main() -> None:
                     default=Path("/workspace-global/action-omni"))
     ap.add_argument("--models-from-global", action="store_true",
                     help="Reuse the revision-locked models already staged by the ALOHA worker")
+    ap.add_argument("--local-assets", action="store_true",
+                    help="Build the manifest from this checkout's existing asset/ files without downloading or copying assets")
     args = ap.parse_args()
     run_started = time.perf_counter()
     log_event("asset_setup.started", dataset=args.dataset, plan=str(args.plan),
@@ -179,6 +235,16 @@ def main() -> None:
     global_root = args.durable_root.resolve()
     global_root.mkdir(parents=True, exist_ok=True)
     manifest_path = global_root / "assets_manifest.json"
+
+    if args.local_assets:
+        manifest = asset_manifest(plan, [args.dataset], asset_root)
+        verify_local_asset_revisions(plan, manifest, asset_root)
+        write_json(manifest_path, manifest)
+        print(f"Local assets verified and recorded: dataset={args.dataset}; manifest={manifest_path}",
+              flush=True)
+        log_event("asset_setup.complete", dataset=args.dataset, manifest=str(manifest_path),
+                  local_assets=True, files=len(manifest["files"]))
+        return
 
     if args.models_from_global:
         if not manifest_path.is_file():

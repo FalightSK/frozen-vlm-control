@@ -3,6 +3,7 @@
 import csv
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import matplotlib
@@ -11,7 +12,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-SOURCE = HERE.parent / "tmp/experiment_result/action_omni_experiment_results_2026-10-21"
+SOURCE_VALUE = os.environ.get("ACTION_OMNI_RESULTS_DIR")
+if not SOURCE_VALUE:
+    raise SystemExit("Set ACTION_OMNI_RESULTS_DIR to the verified results bundle directory.")
+SOURCE = Path(SOURCE_VALUE)
+if not SOURCE.is_dir():
+    raise SystemExit("ACTION_OMNI_RESULTS_DIR does not point to an existing directory.")
 OUT = HERE / "figures"
 OUT.mkdir(exist_ok=True)
 
@@ -90,13 +96,17 @@ seed3 = {(r["backbone"], int(r["task"])): int(r["successes"])
 assert len(seed3) == 20
 task_diffs = [seed3["Qwen", i] - seed3["GR00T", i] for i in range(10)]
 assert sum(task_diffs) == 366 - 337 == 29
-fig, ax = plt.subplots(figsize=(3.45, 2.35))
+# Shortened from the default LIBERO-Goal task order in the vendored suite map.
+task_labels = ["Open middle drawer", "Bowl on stove", "Bottle on cabinet",
+               "Bowl in top drawer", "Bowl on cabinet", "Push plate to stove",
+               "Cheese in bowl", "Turn stove on", "Bowl on plate", "Bottle on rack"]
+fig, ax = plt.subplots(figsize=(3.45, 2.55))
 ys = list(range(9, -1, -1))
 colors = ["#2166ac" if d > 0 else "#b35806" if d < 0 else "#8a9ba6"
           for d in task_diffs]
 ax.barh(ys, task_diffs, height=.65, color=colors)
 ax.axvline(0, color="#444444", lw=.8)
-ax.set(yticks=ys, yticklabels=[f"Task {i}" for i in range(10)],
+ax.set(yticks=ys, yticklabels=task_labels,
        xlim=(-5, 12), xticks=(-4, 0, 4, 8, 12),
        xlabel="Qwen minus GR00T successes (of 40)")
 ax.grid(axis="x", color="#e5e5e5", lw=.5)
@@ -106,6 +116,8 @@ for y, d in zip(ys, task_diffs):
     if d:
         ax.text(d + (.3 if d > 0 else -.3), y, f"{d:+d}",
                 ha="left" if d > 0 else "right", va="center", fontsize=6.5)
+    else:
+        ax.text(.3, y, "0", ha="left", va="center", fontsize=6.5)
 fig.tight_layout()
 fig.savefig(OUT / "libero_seed3_task_difference.png", dpi=300, bbox_inches="tight")
 fig.savefig(OUT / "libero_seed3_task_difference.pdf", bbox_inches="tight")

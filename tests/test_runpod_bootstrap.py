@@ -38,7 +38,7 @@ class RunpodBootstrapTests(unittest.TestCase):
                 self.assertEqual(source_id, plan["cache_source"]["plan_id"])
                 self.assertEqual(source_path, root / "configs/runpod_cached_success_study.json")
         altered = copy.deepcopy(plan)
-        altered["stopping"]["patience_epochs"] = 10
+        altered["backbones"]["groot"] = "different_backbone"
         with self.assertRaises(ValueError):
             cache_source_for_plan(altered, "aloha", "runpod_success_stopped_fresh_cached_v1_aloha", root)
         with self.assertRaises(ValueError):
@@ -61,6 +61,15 @@ class RunpodBootstrapTests(unittest.TestCase):
         self.assertEqual(run_command.call_args.args[0], ["nvidia-smi"])
         self.assertEqual(stop.waits, [30])
         self.assertIn('"stdout": "GPU memory snapshot"', stdout.getvalue())
+
+    def test_progression_campaign_reuses_pinned_features_with_new_training_schedule(self):
+        root = Path(__file__).resolve().parents[1]
+        plan = json.loads((root / "configs/runpod_aloha_minimum_250_success_study.json").read_text())
+        cache_study, cache_id, source = cache_source_for_plan(
+            plan, "aloha", "aloha_progression_250_v1", root)
+        self.assertEqual(cache_study, "runpod_success_stopped_v6_aloha")
+        self.assertEqual(cache_id, plan["cache_source"]["plan_id"])
+        self.assertEqual(source, root / "configs/runpod_cached_success_study.json")
 
 
 if __name__ == "__main__":

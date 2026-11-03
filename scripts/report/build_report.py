@@ -28,6 +28,7 @@ docs/RESULTS.md. Every figure IS read from disk, so figures cannot go stale.
 from __future__ import annotations
 
 import base64
+import os
 import shutil
 import subprocess
 import sys
@@ -36,10 +37,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 # The final numbered set from plots_paper.py, not the exploratory figures that
 # accumulated under head_diagnostics/ as results arrived.
-FIG = ROOT / "asset" / "analysis" / "paper_figures"
-# report/ is at the repo root, NOT under asset/ — asset/ is gitignored, and a
-# report that only exists on the machine that built it is not a deliverable.
-OUT = ROOT / "report"
+ANALYSIS_VALUE = os.environ.get("ACTION_OMNI_ANALYSIS_DIR")
+if not ANALYSIS_VALUE:
+    raise SystemExit("Set ACTION_OMNI_ANALYSIS_DIR to the directory containing paper_figures.")
+ANALYSIS_ROOT = Path(ANALYSIS_VALUE)
+FIG = ANALYSIS_ROOT / "paper_figures"
+if not FIG.is_dir():
+    raise SystemExit("ACTION_OMNI_ANALYSIS_DIR must contain a paper_figures directory.")
+# Keep generated reports beside the repository by default.
+OUT = Path(os.environ.get("ACTION_OMNI_REPORT_DIR", str(ROOT.parent / "generated" / "report")))
 HTML = OUT / "vla_anatomy_report.html"
 PDF = OUT / "vla_anatomy_report.pdf"
 

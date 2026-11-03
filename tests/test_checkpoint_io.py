@@ -93,6 +93,7 @@ class CheckpointIOTests(unittest.TestCase):
                 "atomic_copy_checkpoint": checkpoint_io.atomic_copy_checkpoint,
                 "durable_last_path": durable_alias, "Path": Path,
                 "log_event": log, "write_json_atomic": commit,
+                "replace_with_retry": checkpoint_io.replace_with_retry,
                 "rollout_state_path": root / "controller.json",
                 "args": SimpleNamespace(rollout_study_id="study", rollout_plan_id="plan",
                                         dataset="aloha", exp="exp05", seed=0),

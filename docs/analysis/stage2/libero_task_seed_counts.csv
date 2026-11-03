@@ -1,0 +1,31 @@
+task,instruction,training_seed,groot_successes,qwen_successes,groot_only,qwen_only,difference_pp
+0,open the middle drawer of the cabinet,3,36,40,0,4,-10.0
+0,open the middle drawer of the cabinet,4,35,38,2,5,-7.5
+0,open the middle drawer of the cabinet,5,40,40,0,0,0.0
+1,put the bowl on the stove,3,39,40,0,1,-2.5
+1,put the bowl on the stove,4,40,39,1,0,2.5
+1,put the bowl on the stove,5,39,39,1,1,0.0
+2,put the wine bottle on top of the cabinet,3,39,40,0,1,-2.5
+2,put the wine bottle on top of the cabinet,4,39,40,0,1,-2.5
+2,put the wine bottle on top of the cabinet,5,40,38,2,0,5.0
+3,open the top drawer and put the bowl inside,3,25,30,3,8,-12.5
+3,open the top drawer and put the bowl inside,4,28,28,6,6,0.0
+3,open the top drawer and put the bowl inside,5,35,37,3,5,-5.0
+4,put the bowl on top of the cabinet,3,40,40,0,0,0.0
+4,put the bowl on top of the cabinet,4,40,39,1,0,2.5
+4,put the bowl on top of the cabinet,5,40,38,2,0,5.0
+5,push the plate to the front of the stove,3,39,36,4,1,7.5
+5,push the plate to the front of the stove,4,27,38,0,11,-27.5
+5,push the plate to the front of the stove,5,36,26,12,2,25.0
+6,put the cream cheese in the bowl,3,32,24,13,5,20.0
+6,put the cream cheese in the bowl,4,36,31,7,2,12.5
+6,put the cream cheese in the bowl,5,33,25,12,4,20.0
+7,turn on the stove,3,39,40,0,1,-2.5
+7,turn on the stove,4,40,39,1,0,2.5
+7,turn on the stove,5,38,38,2,2,0.0
+8,put the bowl on the plate,3,36,31,9,4,12.5
+8,put the bowl on the plate,4,35,35,4,4,0.0
+8,put the bowl on the plate,5,31,33,5,7,-5.0
+9,put the wine bottle on the rack,3,31,38,1,8,-17.5
+9,put the wine bottle on the rack,4,35,40,0,5,-12.5
+9,put the wine bottle on the rack,5,35,38,1,4,-7.5

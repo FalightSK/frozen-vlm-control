@@ -1,0 +1,7 @@
+task,training_seed,n_matched_starts,both_reach_requested_goal,groot_only,qwen_only,neither,groot_minus_qwen_pp
+6,3,40,34,1,5,0,-10.0
+6,4,40,34,0,6,0,-15.0
+6,5,40,30,2,7,1,-12.5
+9,3,40,16,16,6,2,25.0
+9,4,40,25,7,7,1,0.0
+9,5,40,26,6,6,2,0.0

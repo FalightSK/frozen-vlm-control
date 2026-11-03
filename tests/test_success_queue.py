@@ -122,6 +122,14 @@ class SuccessQueueTests(unittest.TestCase):
         validated = validate_rollout_result(task, self.aloha_result(task))
         self.assertEqual(validated["success_rate"], 0.5)
 
+    def test_progress_probe_is_traceable_and_lower_priority_than_selection(self):
+        task = self.publish(purpose="progress_probe", extra={
+            "checkpoint_tag": "progress_epoch_000000", "selection_epoch": 0})
+        self.assertEqual(task["checkpoint_tag"], "progress_epoch_000000")
+        self.assertEqual(task["selection_epoch"], 0)
+        self.assertEqual(task["queue_priority"], 3)
+        self.assertEqual(validate_rollout_result(task, self.aloha_result(task))["success_rate"], 0.5)
+
     def test_libero_expands_state_offset_and_validates_balanced_task_rate(self):
         task = self.publish(dataset="libero")
         self.assertEqual(task["evaluation"]["initial_state_ids"], [0, 1])
@@ -138,6 +146,11 @@ class SuccessQueueTests(unittest.TestCase):
                                                                    task_id, state_id)})
         result.update(results=rows, success_rate=0.5)
         self.assertEqual(validate_rollout_result(task, result)["success_rate"], 0.5)
+        result["results"][0]["initial_state_kind"] = "libero_mujoco_state_after_init_and_settle5_v1"
+        self.assertEqual(validate_rollout_result(task, result)["success_rate"], 0.5)
+        result["results"][0]["initial_state_kind"] = "libero_mujoco_state_after_random_reset_v1"
+        with self.assertRaisesRegex(ValueError, "simulator-state fingerprints"):
+            validate_rollout_result(task, result)
 
     def test_wait_reads_only_the_published_exact_result(self):
         task = self.publish()

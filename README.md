@@ -276,7 +276,7 @@ python scripts/analysis/plots_head_diagnostics_aloha.py
 ### Report
 
 ```bash
-python scripts/report/build_report.py   # -> report/vla_anatomy_report.{html,pdf}
+python scripts/report/build_report.py   # -> external generated/report/
 ```
 
 ---
@@ -305,7 +305,7 @@ python scripts/report/build_report.py   # -> report/vla_anatomy_report.{html,pdf
 ├── tests/                    # Synthetic checks; no experiment execution
 ├── docs/                     # Research records, revision workflow, review matrix
 ├── manuscript/               # main.tex, outline.md, README.md
-├── report/                   # Saved/generated reports and protocol summaries
+├── (external output directory) # Generated reports and archived run artifacts
 ├── baselines/                # Separate baseline reproductions
 ├── train.py / inference.py / precompute_embeddings.py / config_loader.py
 │                             # Legacy commands/imports only

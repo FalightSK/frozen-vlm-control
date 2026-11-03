@@ -240,7 +240,8 @@ def make_env(bddl_path: str, cfg):
 
 
 def run_episode(env, agent, cfg, instruction: str, seed: int,
-                record: bool = False, init_state: np.ndarray | None = None) -> dict:
+                record: bool = False, init_state: np.ndarray | None = None,
+                trace_callback=None, success_predicate=None) -> dict:
     """One episode. Returns the outcome plus enough detail to diagnose failures.
 
     Success is the environment's own `done`, which LIBERO sets from the bddl
@@ -279,7 +280,7 @@ def run_episode(env, agent, cfg, instruction: str, seed: int,
                                 if init_state is not None else None)
 
     frames: list[np.ndarray] = []
-    success, steps = False, 0
+    success, environment_success, steps = False, False, 0
     gripper_changes, max_disp = 0, 0.0
     last_grip = None
     start_state = build_state(obs)
@@ -287,6 +288,8 @@ def run_episode(env, agent, cfg, instruction: str, seed: int,
     for steps in range(1, cfg.sim_max_steps + 1):
         action = agent.act(obs)
         obs, _reward, done, _info = env.step(action)
+        if trace_callback is not None:
+            trace_callback(steps, env, action, done)
 
         # cheap failure-mode signal: did the gripper ever actuate, and did the
         # arm move at all? "did nothing" and "did the wrong thing" are different
@@ -300,12 +303,18 @@ def run_episode(env, agent, cfg, instruction: str, seed: int,
 
         if record and steps % 2 == 0:
             frames.append(np.asarray(obs[CAMERA])[::-1].copy())
-        if done:
+        environment_success = bool(done)
+        goal_success = (bool(success_predicate(env))
+                        if success_predicate is not None else environment_success)
+        if goal_success:
             success = True
+            break
+        if environment_success:
             break
 
     return {
         "success": success,
+        "environment_success": environment_success,
         "initial_state_sha256": initial_state_sha256,
         "initial_state_kind": initial_state_kind,
         "initial_observation_sha256": initial_observation_sha256,

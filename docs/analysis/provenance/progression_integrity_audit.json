@@ -1,0 +1,468 @@
+{
+  "scope": "Read-only integrity audit; no training or simulator rollouts.",
+  "studies": {
+    "aloha": {
+      "study_id": "aloha_progression_250_v1",
+      "locked_plan_id": "415a08a2c6f20826271a8c8f5beb5c095db276c9451ece12e129880411ba760d",
+      "locked_protocol_ids": [
+        "97fa699cb307366377cec2eb0f29795d967710f9ffe0fea9d1e1c50108b8d537"
+      ],
+      "locked_checkpoint_rule": "highest_development_success_rate_earliest_tie",
+      "study_status_file": "asset/runs/aloha_progression_250_v1/study_status.json",
+      "status_value": "training_complete_evaluation_pending",
+      "status_completed_policy_count": 5,
+      "status_pending_final_test_records": 6,
+      "status_is_stale_vs_verified_files": true,
+      "final_records": [
+        {
+          "experiment": "exp05",
+          "backbone": "groot",
+          "training_seed": 3,
+          "result_path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_003/final_test.json",
+          "checkpoint_path": "asset/durable/aloha/evaluation_checkpoints/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_003/final_test.pt",
+          "checkpoint_sha256_recomputed": "0ae489966739422f03ef3ba829c4a36166ac6ac52cfe1657c619dfd3b41f29c0",
+          "result_sha256": "d340f30301298c80f55a933a054f51b9955a675c651548e1842479e6d76e2091",
+          "episode_count": 200,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_200": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp05",
+          "backbone": "groot",
+          "training_seed": 4,
+          "result_path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_004/final_test.json",
+          "checkpoint_path": "asset/durable/aloha/evaluation_checkpoints/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_004/final_test.pt",
+          "checkpoint_sha256_recomputed": "cea382f38025a3b3fe52fc05165d9cb4b6a95da6c939b0c43305aa13669af2e8",
+          "result_sha256": "7284cfc19eba65ff49858eb9861bceb512785d5e5c6de47a1f0c57cdf2a80e22",
+          "episode_count": 200,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_200": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp05",
+          "backbone": "groot",
+          "training_seed": 5,
+          "result_path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_005/final_test.json",
+          "checkpoint_path": "asset/durable/aloha/evaluation_checkpoints/aloha_progression_250_v1/415a08a2c6f2/aloha/exp05/seed_005/final_test.pt",
+          "checkpoint_sha256_recomputed": "8a6568bd98fe3fc0c0acd63abdf101dc7d7cf9f23c43a74c9a66170d64525d93",
+          "result_sha256": "46e7f01108841a6dd745529bac9101643edbf96c2c59dd8fa9fcf126e39554aa",
+          "episode_count": 200,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_200": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp06",
+          "backbone": "qwen3vl",
+          "training_seed": 3,
+          "result_path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_003/final_test.json",
+          "checkpoint_path": "asset/durable/aloha/evaluation_checkpoints/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_003/final_test.pt",
+          "checkpoint_sha256_recomputed": "c9a7958cc8504ab3ac1ab4a99e2df91cc5d516b7b978d4f0ed662ea4d198d7c7",
+          "result_sha256": "c24d7cb158ce965391c448144661d52f12ec752b3b47f65dee38c6651ce8ff78",
+          "episode_count": 200,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_200": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp06",
+          "backbone": "qwen3vl",
+          "training_seed": 4,
+          "result_path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_004/final_test.json",
+          "checkpoint_path": "asset/durable/aloha/evaluation_checkpoints/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_004/final_test.pt",
+          "checkpoint_sha256_recomputed": "fb7061c2d53f7897cac1dca83e87d48f83ff27c600ab17f84d75167155f61384",
+          "result_sha256": "803916947afb46e6de53d7d89ceccf875a09b003b2f6f0efeae2635fa847971c",
+          "episode_count": 200,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_200": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp06",
+          "backbone": "qwen3vl",
+          "training_seed": 5,
+          "result_path": "asset/durable/aloha/evaluation_results/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_005/final_test.json",
+          "checkpoint_path": "asset/durable/aloha/evaluation_checkpoints/aloha_progression_250_v1/415a08a2c6f2/aloha/exp06/seed_005/final_test.pt",
+          "checkpoint_sha256_recomputed": "bde787cc6ce3ec541b93e0e76c1a6f6b499be96afc271d65b2178d6612b7a063",
+          "result_sha256": "0a7966c385be13b9f9d5f5e8c85724c8e81e9dcb6f95cd30939dc3e651e8c348",
+          "episode_count": 200,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_200": true
+          },
+          "checks_pass": true
+        }
+      ],
+      "cache_manifests": {
+        "exp05": {
+          "manifest_path": "asset/cache/precomputed/aloha/exp05/vlm_embeddings.h5.manifest.json",
+          "cache_path": "asset/cache/precomputed/aloha/exp05/vlm_embeddings.h5",
+          "manifest_cache_id": "3917c35e47f0615bb0f53e26e673668418fc7442f137a48157a75df1b4fb044c",
+          "h5_cache_id": "3917c35e47f0615bb0f53e26e673668418fc7442f137a48157a75df1b4fb044c",
+          "protocol_id": "97fa699cb307366377cec2eb0f29795d967710f9ffe0fea9d1e1c50108b8d537",
+          "backbone": "groot",
+          "manifest_size_bytes": 7885468704,
+          "actual_size_bytes": 7885468704,
+          "manifest_size_matches": true,
+          "h5_cache_id_matches_manifest": true,
+          "h5_protocol_matches_manifest": true,
+          "encoder_code_id": "99de1d118b31eb9861529cf68c3793a83bb9e3c1e6406df86d019294ac95a9fa",
+          "source_asset_count": 14,
+          "h5_config": {
+            "vlm_backbone": "groot",
+            "vlm_extract_layers": [
+              16
+            ],
+            "vlm_hidden_size": 2048,
+            "n_views": null,
+            "action_dim": 14,
+            "state_dim": 14
+          },
+          "checks_pass": true
+        },
+        "exp06": {
+          "manifest_path": "asset/cache/precomputed/aloha/exp06/vlm_embeddings.h5.manifest.json",
+          "cache_path": "asset/cache/precomputed/aloha/exp06/vlm_embeddings.h5",
+          "manifest_cache_id": "74aae3e13f2dd0a88b95d018476f528a18b37e879a9d5d38347a80cc7dd2af73",
+          "h5_cache_id": "74aae3e13f2dd0a88b95d018476f528a18b37e879a9d5d38347a80cc7dd2af73",
+          "protocol_id": "97fa699cb307366377cec2eb0f29795d967710f9ffe0fea9d1e1c50108b8d537",
+          "backbone": "qwen3vl",
+          "manifest_size_bytes": 7885468704,
+          "actual_size_bytes": 7885468704,
+          "manifest_size_matches": true,
+          "h5_cache_id_matches_manifest": true,
+          "h5_protocol_matches_manifest": true,
+          "encoder_code_id": "99de1d118b31eb9861529cf68c3793a83bb9e3c1e6406df86d019294ac95a9fa",
+          "source_asset_count": 9,
+          "h5_config": {
+            "vlm_backbone": "qwen3vl",
+            "vlm_extract_layers": [
+              16
+            ],
+            "vlm_hidden_size": 2048,
+            "n_views": null,
+            "action_dim": 14,
+            "state_dim": 14
+          },
+          "checks_pass": true
+        }
+      },
+      "paired_cache_input_checks": {
+        "same_sample_count": true,
+        "same_sequence_shape": true,
+        "episode_ids_identical": true,
+        "states_identical": true,
+        "actions_identical": true,
+        "validation_mask_identical": true,
+        "img_masks_identical": true,
+        "episode_ids_same_order": true,
+        "validation_mask_same_count": true
+      },
+      "checks_pass": true
+    },
+    "libero": {
+      "study_id": "libero_progression_120_v1",
+      "locked_plan_id": "c6854e3ff020250d5244fe87016764661cdb6bf747c1c007671966b4c160f506",
+      "locked_protocol_ids": [
+        "4d1d6267e4270ac86caf491ea9b5fb630eb0e3a8a728822f96e94be9b3e3b0ad"
+      ],
+      "locked_checkpoint_rule": "highest_development_success_rate_earliest_tie",
+      "study_status_file": "asset/runs/libero_progression_120_v1/study_status.json",
+      "status_value": "training_complete_evaluation_pending",
+      "status_completed_policy_count": 5,
+      "status_pending_final_test_records": 6,
+      "status_is_stale_vs_verified_files": true,
+      "final_records": [
+        {
+          "experiment": "exp05",
+          "backbone": "groot",
+          "training_seed": 3,
+          "result_path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_003/final_test.json",
+          "checkpoint_path": "asset/durable/libero/evaluation_checkpoints/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_003/final_test.pt",
+          "checkpoint_sha256_recomputed": "68c86d4f16270bd3e891c9d0d7a1c37dc8c14d8e7842932f957f77607c8294fc",
+          "result_sha256": "050ef30bfb20a5470c1e8bd0219f3523c184f93e411e425b1345b3e229284364",
+          "episode_count": 400,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_400": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp05",
+          "backbone": "groot",
+          "training_seed": 4,
+          "result_path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_004/final_test.json",
+          "checkpoint_path": "asset/durable/libero/evaluation_checkpoints/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_004/final_test.pt",
+          "checkpoint_sha256_recomputed": "f522ba59ea1446397808c9f0f820362526373278c494afb1d165dc6123d4f5fb",
+          "result_sha256": "da3563bea122a5f98ba9ed0b86ced481c4bd254ed4d0d737cfb072d08ab4fa28",
+          "episode_count": 400,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_400": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp05",
+          "backbone": "groot",
+          "training_seed": 5,
+          "result_path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_005/final_test.json",
+          "checkpoint_path": "asset/durable/libero/evaluation_checkpoints/libero_progression_120_v1/c6854e3ff020/libero/exp05/seed_005/final_test.pt",
+          "checkpoint_sha256_recomputed": "3eeb7febdc9a428147d00fde86c6bdecf2b876b88af7d80c195c171a34b8d62e",
+          "result_sha256": "47d504053102de8fbaf847021e7d64728082b5275b5910c84cb216baed84ced4",
+          "episode_count": 400,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_400": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp06",
+          "backbone": "qwen3vl",
+          "training_seed": 3,
+          "result_path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_003/final_test.json",
+          "checkpoint_path": "asset/durable/libero/evaluation_checkpoints/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_003/final_test.pt",
+          "checkpoint_sha256_recomputed": "963619d9cef4c9bd3913cb1bddab080a8b0f5c9a6e102a75463cff4c663506d2",
+          "result_sha256": "3dabca241cc8da5198de57122fb528abc30f513460eb75af89f4082bc71977f2",
+          "episode_count": 400,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_400": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp06",
+          "backbone": "qwen3vl",
+          "training_seed": 4,
+          "result_path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_004/final_test.json",
+          "checkpoint_path": "asset/durable/libero/evaluation_checkpoints/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_004/final_test.pt",
+          "checkpoint_sha256_recomputed": "be26215d355ada14b6db35e4fd3cc63981bf783c7d35f509aae35b82fbe5a6db",
+          "result_sha256": "ab8a64a24b9a6c89ce133f113d30834edb39e3f399dc0f17bd051a9fb92a3381",
+          "episode_count": 400,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_400": true
+          },
+          "checks_pass": true
+        },
+        {
+          "experiment": "exp06",
+          "backbone": "qwen3vl",
+          "training_seed": 5,
+          "result_path": "asset/durable/libero/evaluation_results/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_005/final_test.json",
+          "checkpoint_path": "asset/durable/libero/evaluation_checkpoints/libero_progression_120_v1/c6854e3ff020/libero/exp06/seed_005/final_test.pt",
+          "checkpoint_sha256_recomputed": "f1a0d6a39b865084b4d1da9e6f161ec6f2dfdabd8561d2d8a4728a0a60fd9568",
+          "result_sha256": "97d86f8c043c8e63147068f0b222c9897b57b7b5991825566102de5a36ba3f53",
+          "episode_count": 400,
+          "checks": {
+            "plan_id_matches": true,
+            "protocol_id_matches_locked_job": true,
+            "cache_id_matches_locked_job": true,
+            "run_signature_matches_locked_job": true,
+            "result_identity_matches": true,
+            "final_epoch_matches": true,
+            "result_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_actual_file": true,
+            "selected_checkpoint_hash_matches_status": true,
+            "selected_epoch_matches_status": true,
+            "head_config_matches_paired_backbone": true,
+            "episode_count_is_400": true
+          },
+          "checks_pass": true
+        }
+      ],
+      "cache_manifests": {
+        "exp05": {
+          "manifest_path": "asset/cache/precomputed/libero/exp05/vlm_embeddings.h5.manifest.json",
+          "cache_path": "asset/cache/precomputed/libero/exp05/vlm_embeddings.h5",
+          "manifest_cache_id": "367e02a7c48cdb9cb50237b798939b49d0ff1a0bfb7477b0450898c2da333841",
+          "h5_cache_id": "367e02a7c48cdb9cb50237b798939b49d0ff1a0bfb7477b0450898c2da333841",
+          "protocol_id": "4d1d6267e4270ac86caf491ea9b5fb630eb0e3a8a728822f96e94be9b3e3b0ad",
+          "backbone": "groot",
+          "manifest_size_bytes": 39717656240,
+          "actual_size_bytes": 39717656240,
+          "manifest_size_matches": true,
+          "h5_cache_id_matches_manifest": true,
+          "h5_protocol_matches_manifest": true,
+          "encoder_code_id": "99de1d118b31eb9861529cf68c3793a83bb9e3c1e6406df86d019294ac95a9fa",
+          "source_asset_count": 14,
+          "h5_config": {
+            "vlm_backbone": "groot",
+            "vlm_extract_layers": [
+              16
+            ],
+            "vlm_hidden_size": 2048,
+            "n_views": 2,
+            "action_dim": 7,
+            "state_dim": 9
+          },
+          "checks_pass": true
+        },
+        "exp06": {
+          "manifest_path": "asset/cache/precomputed/libero/exp06/vlm_embeddings.h5.manifest.json",
+          "cache_path": "asset/cache/precomputed/libero/exp06/vlm_embeddings.h5",
+          "manifest_cache_id": "718f44945973c67d6f299685b67dd470f2bcdedd2e81278b4a926b928b73bf9d",
+          "h5_cache_id": "718f44945973c67d6f299685b67dd470f2bcdedd2e81278b4a926b928b73bf9d",
+          "protocol_id": "4d1d6267e4270ac86caf491ea9b5fb630eb0e3a8a728822f96e94be9b3e3b0ad",
+          "backbone": "qwen3vl",
+          "manifest_size_bytes": 39717656240,
+          "actual_size_bytes": 39717656240,
+          "manifest_size_matches": true,
+          "h5_cache_id_matches_manifest": true,
+          "h5_protocol_matches_manifest": true,
+          "encoder_code_id": "99de1d118b31eb9861529cf68c3793a83bb9e3c1e6406df86d019294ac95a9fa",
+          "source_asset_count": 9,
+          "h5_config": {
+            "vlm_backbone": "qwen3vl",
+            "vlm_extract_layers": [
+              16
+            ],
+            "vlm_hidden_size": 2048,
+            "n_views": 2,
+            "action_dim": 7,
+            "state_dim": 9
+          },
+          "checks_pass": true
+        }
+      },
+      "paired_cache_input_checks": {
+        "same_sample_count": true,
+        "same_sequence_shape": true,
+        "episode_ids_identical": true,
+        "states_identical": true,
+        "actions_identical": true,
+        "validation_mask_identical": true,
+        "img_masks_identical": true,
+        "episode_ids_same_order": true,
+        "validation_mask_same_count": true
+      },
+      "checks_pass": true
+    }
+  },
+  "all_checks_pass": true
+}

@@ -176,13 +176,13 @@ its batch-32 features failed comparison with the earlier batch-4 observation:
 minimum cosine similarity was about 0.99407 and maximum relative RMS difference
 was about 0.10878. Training was stopped before a completed epoch was recorded.
 The attempt is not eligible paper evidence. Its compact batch-parity records are
-retained in `docs/camera_ready_evidence/`; generated run outputs are superseded.
+retained in the external archive; generated run outputs are superseded.
 
 A controlled probe held input IDs/pixels and weights fixed while toggling
 `torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction`. Disabling
 it made the tested batch-32 versus batch-4 and batch-1 outputs exactly equal,
 including all captured hidden layers in the first-four comparison. Probe
-results are in [`batch_probe.json`](camera_ready_evidence/batch_probe.json).
+results are in the externally archived `batch_probe.json`.
 This isolates the numerical
 setting in the tested build; it does not establish a robot-policy mechanism.
 [PyTorch's numerical-accuracy documentation](https://docs.pytorch.org/docs/2.10/notes/numerical_accuracy.html#reduced-precision-reduction-for-fp16-and-bf16-gemms)

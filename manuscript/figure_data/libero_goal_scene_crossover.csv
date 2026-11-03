@@ -1,0 +1,13 @@
+scene_task,scene_goal,requested_goal,condition,training_seed,n,groot_successes,qwen_successes,groot_only,qwen_only,both_success,both_fail,groot_success_rate,qwen_success_rate,gr00t_minus_qwen_pp
+6,cheese_bowl,cheese_bowl,canonical,3,40,32,24,13,5,19,3,0.8,0.6,20.0
+6,cheese_bowl,wine_rack,swapped,3,40,35,39,1,5,34,0,0.875,0.975,-10.0
+6,cheese_bowl,cheese_bowl,canonical,4,40,36,31,7,2,29,2,0.9,0.775,12.5
+6,cheese_bowl,wine_rack,swapped,4,40,34,40,0,6,34,0,0.85,1.0,-15.0
+6,cheese_bowl,cheese_bowl,canonical,5,40,33,25,12,4,21,3,0.825,0.625,20.0
+6,cheese_bowl,wine_rack,swapped,5,40,32,37,2,7,30,1,0.8,0.925,-12.5
+9,wine_rack,wine_rack,canonical,3,40,31,38,1,8,30,1,0.775,0.95,-17.5
+9,wine_rack,cheese_bowl,swapped,3,40,32,22,16,6,16,2,0.8,0.55,25.0
+9,wine_rack,wine_rack,canonical,4,40,35,40,0,5,35,0,0.875,1.0,-12.5
+9,wine_rack,cheese_bowl,swapped,4,40,32,32,7,7,25,1,0.8,0.8,0.0
+9,wine_rack,wine_rack,canonical,5,40,35,38,1,4,34,1,0.875,0.95,-7.5
+9,wine_rack,cheese_bowl,swapped,5,40,32,32,6,6,26,2,0.8,0.8,0.0

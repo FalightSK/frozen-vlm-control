@@ -206,7 +206,9 @@ class StatisticsTests(unittest.TestCase):
                 "checkpoint_sha256": "a", "run_signature": "a", "cache_id": "a",
                 "configuration": {"vlm_backbone": "groot", "batch_size": 128},
                 "episodes": [{"initial_state_id": 0, "is_success": True,
-                              "environment_seed": 42, "policy_sampling_seed": 123}]}
+                              "environment_seed": 42, "policy_sampling_seed": 123,
+                              "initial_state_sha256": "b" * 64,
+                              "initial_state_kind": "gym_aloha_mujoco_state_v1"}]}
         right = deepcopy(left)
         right["checkpoint_sha256"] = "b"
         right["configuration"]["vlm_backbone"] = "qwen3vl"
@@ -223,6 +225,19 @@ class StatisticsTests(unittest.TestCase):
         right["episodes"].append(dict(right["episodes"][0]))
         with self.assertRaises(ValueError):
             compare_records(left, right)
+
+    def test_libero_settle5_fingerprints_are_accepted_for_paired_results(self):
+        left = {"dataset": "libero", "training_seed": 3, "protocol_id": "protocol",
+                "checkpoint_sha256": "a", "run_signature": "a", "cache_id": "cache",
+                "configuration": {"vlm_backbone": "groot", "batch_size": 128},
+                "results": [{"task": 0, "condition": "canonical", "initial_state_id": 0,
+                             "success": True, "environment_seed": 0,
+                             "policy_sampling_seed": 123, "initial_state_sha256": "b" * 64,
+                             "initial_state_kind": "libero_mujoco_state_after_init_and_settle5_v1"}]}
+        right = deepcopy(left)
+        right["checkpoint_sha256"] = "c"
+        right["configuration"]["vlm_backbone"] = "qwen3vl"
+        compare_records(left, right, resamples=10)
 
     def test_operational_failure_labels(self):
         reward = np.array([1, 2, 2, 2])

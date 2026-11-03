@@ -67,3 +67,20 @@ third_party/
 /report/vla_offline_evaluation_review_2026-10-03.md
 /report/vla_evaluation_evidence_matrix_2026-10-03.md
 /report/vla_evaluation_search_log_2026-10-03.json
+
+# Local manuscript and analysis planning documents
+/docs/analysis_todo.md
+/docs/manuscript_story_plan.md
+/docs/analysis/stage3_resume_plan.md
+
+/plan.md
+/manuscript/outline.md
+/manuscript/REVIEWER_CHANGES.md
+
+# LaTeX intermediate files; retain source, figures, data, and final PDF.
+/manuscript/*.aux
+/manuscript/*.out
+/manuscript/*.xdv
+/manuscript/*.synctex.gz
+/manuscript/*.fls
+/manuscript/*.fdb_latexmk

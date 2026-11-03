@@ -13,6 +13,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+from scripts.run_log import replace_with_retry
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -66,7 +68,7 @@ def plot_run_losses(run_dir: Path) -> Path | None:
     temporary = output.with_name(output.name + f".{os.getpid()}.tmp")
     try:
         fig.savefig(temporary, format="png", dpi=160)
-        os.replace(temporary, output)
+        replace_with_retry(temporary, output)
     finally:
         plt.close(fig)
         if temporary.exists():

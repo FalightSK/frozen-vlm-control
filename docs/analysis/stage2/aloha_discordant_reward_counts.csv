@@ -1,0 +1,7 @@
+training_seed,only_successful_backbone,discordant_starts,failed_policy_max_reward_0,failed_policy_max_reward_1,failed_policy_max_reward_2,failed_policy_max_reward_3
+3,GR00T,47,9,3,35,0
+3,Qwen,17,4,1,12,0
+4,GR00T,60,19,2,39,0
+4,Qwen,11,4,2,5,0
+5,GR00T,78,39,0,39,0
+5,Qwen,16,0,3,13,0

@@ -36,6 +36,9 @@ class TinyHead(nn.Module):
         prediction = self.decoder(self.dropout(self.adapter(embedding) + state))
         return (prediction - actions).square().mean()
 
+    def sample(self, embedding, state, num_steps=1, img_mask=None):
+        return self.decoder(self.adapter(embedding) + state)
+
 
 class TrainingScheduleTests(unittest.TestCase):
     def test_fixed_update_budget_probe_and_recovery_resume(self):
@@ -45,7 +48,7 @@ class TrainingScheduleTests(unittest.TestCase):
         data = [{"embedding": torch.tensor([i / 20, 1.0]),
                  "state": torch.tensor([0.2, 0.3]),
                  "actions": torch.tensor([0.4, 0.5])} for i in range(20)]
-        replace = Path.replace
+        replace = trainer.replace_with_retry
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             cache = root / "cache.pt"
@@ -60,15 +63,24 @@ class TrainingScheduleTests(unittest.TestCase):
                             raise InterruptedError("Simulated loss of the remote client")
                     return result
 
+                real_write_json = trainer.write_json_atomic
+
+                def deny_progress_write(path, payload):
+                    if Path(path).name == "progress.json":
+                        raise PermissionError("simulated persistent Windows file lock")
+                    return real_write_json(path, payload)
+
                 with patch.object(trainer, "get_config", side_effect=lambda *_: deepcopy(cfg)), \
                      patch.object(trainer, "_get_embedding_dataset", return_value=data), \
                      patch.object(trainer, "VLATrainModel", TinyHead), \
-                     patch.object(Path, "replace", commit), redirect_stdout(io.StringIO()):
-                    trainer.main(["--dataset", "aloha", "--exp", "exp05", "--seed", "17",
-                                  "--cache", str(cache), "--output-dir", str(output), "--workers", "0",
-                                  "--steps-per-epoch", "4", "--max-steps", "12",
-                                  "--warmup-steps", "2", "--lr-decay-steps", "12",
-                                  "--checkpoint-every-steps", "4", "--probe-epochs", "2"])
+                     patch.object(trainer, "replace_with_retry", commit), redirect_stdout(io.StringIO()):
+                    with patch.object(trainer, "write_json_atomic", side_effect=deny_progress_write):
+                        trainer.main(["--dataset", "aloha", "--exp", "exp05", "--seed", "17",
+                                      "--cache", str(cache), "--output-dir", str(output), "--workers", "0",
+                                      "--steps-per-epoch", "4", "--max-steps", "12",
+                                      "--warmup-steps", "2", "--lr-decay-steps", "12",
+                                      "--checkpoint-every-steps", "4", "--probe-epochs", "2",
+                                      "--save-initial-checkpoint"])
                 return torch.load(output / "checkpoints/last.pt", map_location="cpu", weights_only=False)
 
             baseline_dir = root / "baseline"
@@ -77,6 +89,14 @@ class TrainingScheduleTests(unittest.TestCase):
             self.assertEqual(baseline["training_seed"], 17)
             self.assertEqual(baseline["training_mode"], "update_matched")
             self.assertTrue((baseline_dir / "checkpoints/probe_step_00000008.pt").is_file())
+            initial = torch.load(baseline_dir / "checkpoints/focus_epoch_000000.pt",
+                                 map_location="cpu", weights_only=False)
+            self.assertEqual(initial["epoch"], 0)
+            self.assertIsNotNone(initial["val_loss"])
+            initial_history = json.loads((baseline_dir / "history.jsonl").read_text().splitlines()[0])
+            self.assertEqual(initial_history["epoch"], 0)
+            self.assertIsNotNone(initial_history["train_loss"])
+            self.assertIsNotNone(initial_history["validation_loss"])
             previous = torch.load(baseline_dir / "checkpoints/previous.pt", weights_only=False)
             self.assertEqual(previous["global_step"], 8)
 
@@ -96,7 +116,7 @@ class TrainingScheduleTests(unittest.TestCase):
         data = [{"embedding": torch.tensor([i / 20, 1.0]),
                  "state": torch.tensor([0.2, 0.3]),
                  "actions": torch.tensor([0.4, 0.5])} for i in range(20)]
-        adam_step, replace = torch.optim.AdamW.step, Path.replace
+        adam_step, replace = torch.optim.AdamW.step, trainer.replace_with_retry
         rates = []
 
         def checked_step(optim, *args, **kwargs):
@@ -121,7 +141,7 @@ class TrainingScheduleTests(unittest.TestCase):
                      patch.object(trainer, "_get_embedding_dataset", return_value=data), \
                      patch.object(trainer, "VLATrainModel", TinyHead), \
                      patch.object(torch.optim.AdamW, "step", checked_step), \
-                     patch.object(Path, "replace", commit), redirect_stdout(io.StringIO()):
+                     patch.object(trainer, "replace_with_retry", commit), redirect_stdout(io.StringIO()):
                     trainer.main(["--dataset", "aloha", "--exp", "exp05", "--seed", "7",
                                   "--cache", str(cache), "--output-dir", str(output), "--workers", "0"])
                 return torch.load(output / "checkpoints/last.pt", map_location="cpu", weights_only=False)

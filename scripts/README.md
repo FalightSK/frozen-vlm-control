@@ -31,6 +31,23 @@ Shared runtime code belongs in `models/`, `data/`, `envs/`, and `configs/`.
 | `train_lt_onthefly.py`, `convert_language_table.py` | Language Table training/data variants. |
 | `analysis.py`, `compare.py`, `export_bank.py` | Legacy PushT analysis and probe-bank export. |
 
+## Choose RunPod or local execution
+
+Choose the backend explicitly: RunPod is the default, and `--local` selects a workstation run with an explicit durable root so it cannot silently write to `/workspace-global`.
+
+For the complete local campaign, use the isolated workstation environment and one launcher command. It records the installed, revision-locked assets without downloading or copying them, prepares ALOHA caches, trains and evaluates ALOHA, then prepares, trains, and evaluates two-camera LIBERO. LIBERO simulator checks use the adjacent `vla_libero` Conda environment when present; override it with `-LiberoPython` if needed.
+
+```powershell
+$basePy = 'C:\Users\SK\miniconda3\envs\vla\python.exe'
+$env:ACTIONOMNI_BASE_PYTHON = $basePy
+$basePy -m venv --system-site-packages .venv
+$py = (Resolve-Path '.venv/Scripts/python.exe').Path
+& $py -m pip install 'transformers==4.57.6' 'huggingface-hub==0.36.0'
+Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/run_local_success_study.ps1','-Dataset','aloha','-Python',$basePy,'-ThenLibero') -WindowStyle Hidden
+```
+
+To run one dataset only, omit `-ThenLibero` and select `-Dataset aloha` or `-Dataset libero`. Pass `-StudyId <dataset>_progression_<budget>_v1` for a fixed-budget plan; run outputs use `asset/runs/<StudyId>/<backbone>/seed_<NNN>/`. Experiment IDs remain recorded in each run's metadata. Durable launcher state, evaluation queues/results, and recovery snapshots use `asset/durable/<dataset>/`; temporary evaluator files use `asset/evaluation_scratch/<task-hash>/`. The launcher recognizes an existing in-flight store under the former layout so it can resume without rebuilding state. Success-stopped runs retain one policy snapshot at each rollout-selection epoch and one policy-only midpoint between selection epochs. The full-state `last.pt` is overwritten at each epoch boundary for crash recovery; `previous.pt` is refreshed every 2,000 optimizer updates. Durable full-state recovery is capped at the newest two verified revisions, so it does not accumulate an epoch-by-epoch archive. A laptop must stay awake for local jobs to continue.
+
 The [camera-ready workflow](../docs/CAMERA_READY.md) identifies the current opt-in
 protocol and deferred experiment commands. Historical entrypoints do not
 constitute revised experiment results.

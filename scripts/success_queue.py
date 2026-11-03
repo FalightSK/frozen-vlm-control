@@ -14,6 +14,12 @@ from experiment_protocol import digest, file_digest, sampling_seed
 from scripts.run_log import log_event
 
 
+LIBERO_STATE_KINDS = frozenset({
+    "libero_mujoco_state_after_init_and_settle_v1",
+    "libero_mujoco_state_after_init_and_settle5_v1",
+})
+
+
 _RESULT_WARNING_AT: dict[str, float] = {}
 
 
@@ -131,13 +137,15 @@ def _identity(cfg, metadata: Mapping, checkpoint: dict) -> dict:
 def _checkpoint_tag(metadata: Mapping, purpose: str) -> str:
     if purpose == "final_test":
         return "final_test"
-    if purpose != "development_selection":
+    if purpose not in {"development_selection", "progress_probe"}:
         raise ValueError(f"Unsupported rollout purpose: {purpose!r}")
     tag = metadata.get("checkpoint_tag")
     if tag is None and metadata.get("selection_epoch") is not None:
-        tag = f"selection_epoch_{int(metadata['selection_epoch']):06d}"
-    if not isinstance(tag, str) or not re.fullmatch(r"selection_epoch_\d{6}", tag):
-        raise ValueError("Development task needs checkpoint_tag='selection_epoch_NNNNNN'")
+        prefix = "progress_epoch" if purpose == "progress_probe" else "selection_epoch"
+        tag = f"{prefix}_{int(metadata['selection_epoch']):06d}"
+    prefix = "progress_epoch" if purpose == "progress_probe" else "selection_epoch"
+    if not isinstance(tag, str) or not re.fullmatch(prefix + r"_\d{6}", tag):
+        raise ValueError(f"{purpose} task needs checkpoint_tag='{prefix}_NNNNNN'")
     return tag
 
 
@@ -238,7 +246,8 @@ def publish_rollout_task(cfg, metadata: Mapping, checkpoint_path: str | Path,
         "backbone": identity["backbone"], "training_seed": seed,
         "checkpoint_tag": tag, "purpose": purpose,
         "is_final": purpose == "final_test",
-        "queue_priority": 0 if purpose == "development_selection" else 1,
+        "queue_priority": (0 if purpose == "development_selection" else
+                           2 if purpose == "final_test" else 3),
         "optimizer_step": identity["optimizer_step"], "protocol_id": identity["protocol_id"],
         "run_signature": identity["run_signature"], "feature_mode": identity["feature_mode"],
         "checkpoint": {"path": checkpoint_rel, "size_bytes": source_stat.st_size,
@@ -368,7 +377,7 @@ def validate_rollout_result(task: Mapping, result: Mapping) -> dict:
             observed = {row.get("initial_state_id") for row in task_rows}
             if observed != expected_ids:
                 raise ValueError(f"LIBERO initial-state IDs differ for task {index}")
-            if any(row.get("initial_state_kind") != "libero_mujoco_state_after_init_and_settle_v1"
+            if any(row.get("initial_state_kind") not in LIBERO_STATE_KINDS
                    or not _valid_sha256(row.get("initial_state_sha256"))
                    or row.get("environment_seed") != spec["environment_seed"] + row["initial_state_id"]
                    or row.get("policy_sampling_seed") != sampling_seed(
